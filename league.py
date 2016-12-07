@@ -5,10 +5,11 @@ import pandas
 
 # reorder columns
 def set_column_sequence(dataframe, seq, front=True):
-    '''Takes a dataframe and a subsequence of its columns,
-       returns dataframe with seq as first columns if "front" is True,
-       and seq as last columns if "front" is False.
-    '''
+
+     # Takes a dataframe and a subsequence of its columns,
+     #  returns dataframe with seq as first columns if "front" is True,
+     #  and seq as last columns if "front" is False.
+
     cols = seq[:] # copy so we don't mutate seq
     for x in dataframe.columns:
         if x not in cols:
@@ -139,15 +140,8 @@ class LeagueTable:
                  int(stats["against"][stats["team id"].index(result_1[0])]))
         stats_1 = pandas.DataFrame(stats)
         # TODO: Sort the values
-        print(stats)
-        print("stats")
-
-        print(stats_1.sort_values(by=["win%", "points difference", "for", "wins", "team id"],
-                                  ascending=[0, 0, 0, 0, 0]))
-        print("stats")
         cols = set_column_sequence(stats_1, ["team name", "team id", "played", "wins", "draws", "losses", "win%", "for",
                                              "against", "points difference"])
-        print(cols)
         with open(self._csv_file, "w") as file:
             file.write(cols.to_csv())
 
@@ -166,13 +160,6 @@ class LeagueTable:
         # Will display the file in an easy to read format (maybe csv for the moment)
         pass
 
-a = LeagueTable({"T1": "tigers", "T2": "lions", "T3": "stuff", "T4": "guys", "T5": "gals", "T6": "dolls", "T7": "ducks",
-                 "T8": "then", "T9": "fine", "T10": "jaguars", "T11": "lakers", "T12": "fires"}, "test_league.yaml",
-                "test_csv.csv", "Div III.5")
-a.create_schedule()
-a.initialise_file()
-a.update_scores([(["T1", 20], ["T6", 19]), (["T10", 54], ["T9", 54]), (["T11", 15], ["T12", 12]),
-                 (["T3", 13], ["T4", 24]), (["T2", 17], ["T5", 28]), (["T7", 42], ["T8", 3])])
 # TODO: Create set of leagues each with 12 teams.  Sets us a schedule and holds it ready to play
 
 # TODO: Amend league files on the basis of the games
