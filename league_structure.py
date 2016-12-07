@@ -14,6 +14,7 @@ pool should contain 3 teams attempting promotion and 1 avoiding demotion).
 """
 import yaml
 import os
+import csv
 
 from random import randint
 
@@ -40,13 +41,30 @@ def create_tier(tier):
         # TODO: create league table and fixture list file
 
 
-def enact_promotions():
-    leagues = []
-    tiers = []
-    for tier in tiers:
-        for league in tiers[league]:
-            pass
-        # TODO: Grab league table - find bottom 3 and add to going to tier x tab (if x tier exists).  Similarly to first
+def enact_promotions(league_file):
+    promotion_list = []
+    demotion_list = []
+    promotion_qualifiers = []
+    demotion_qualifiers = []
+    for tier in range(1, len([name for name in os.listdir(league_file)]) + 1):
+        for file in os.listdir(league_file + "//" + str(tier)):
+            if "csv" in file:
+                with open(league_file + "//" + str(tier) + "//" + str(tier), 'rb') as csv_file:
+                    standings = csv.reader(csv_file)
+                place = 0
+                for row in standings:
+                    if tier != 1:
+                        if place == 0:
+                            promotion_list.append(row[1])
+                        elif place == 1:
+                            promotion_qualifiers.append(row[1])
+                    if tier != len([name for name in os.listdir(league_file)]):
+                        if place in (9, 10, 11):
+                            demotion_list.append(row[1])
+                        if place == 8:
+                            demotion_qualifiers.append(row[1])
+                    place = 0
+
         # create various promotion pools from each league.
     pass
 
