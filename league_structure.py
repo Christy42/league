@@ -23,7 +23,7 @@ from League.league import LeagueTable
 
 
 def create_tier(tier):
-    for i in range(3 ** (tier - 1)):
+    for i in range(max(3 ** (tier - 1), 1)):
         league_name = chr(tier - 1 + ord('a')) + " " + str(i)
         if not os.path.exists("leagues//" + str(tier)):
             os.makedirs("leagues//" + str(tier))
@@ -69,9 +69,22 @@ def enact_promotions(league_file):
             "dem_playoff": demotion_qualifiers}
 
 def run_playoffs(promotions):
+    play_offs = {}
     for tier in range(1, len(promotions["promotion"])):
-        pass
+        for league in range(max(1, (tier - 1) * 3)):
+            play_offs[tier * 100 + league] = []
+            play_offs[tier * 100 + league].append(promotions["dem_playoff"][tier][0])
+            for i in range(3):
+                team = randint(0, len(promotions["prom_playoff"][tier]))
+                play_offs[tier * 100 + league].append(promotions["prom_playoff"][tier+1][team])
+                del promotions["prom_playoff"][tier + 1][team]
+    # create a yaml file with the schedule
+    # also include auto promote/demote teams - maybe a second yaml file?
 
+# create a function to run the games and add all the needed teams to the correct lists
+
+# create a function to take these from a file and enact/remove promotions
+# delete yaml files.  Have season files?  maybe in league file name
 
 def create_cup_fixtures(tier):
     no_of_teams = 0
