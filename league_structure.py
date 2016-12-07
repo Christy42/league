@@ -42,11 +42,12 @@ def create_tier(tier):
 
 
 def enact_promotions(league_file):
-    promotion_list = []
-    demotion_list = []
-    promotion_qualifiers = []
-    demotion_qualifiers = []
+    promotion_list = {}
+    demotion_list = {}
+    promotion_qualifiers = {}
+    demotion_qualifiers = {}
     for tier in range(1, len([name for name in os.listdir(league_file)]) + 1):
+        promotion_list[tier] = demotion_list[tier] = promotion_qualifiers[tier] = demotion_qualifiers[tier] = []
         for file in os.listdir(league_file + "//" + str(tier)):
             if "csv" in file:
                 with open(league_file + "//" + str(tier) + "//" + str(tier), 'rb') as csv_file:
@@ -55,18 +56,21 @@ def enact_promotions(league_file):
                 for row in standings:
                     if tier != 1:
                         if place == 0:
-                            promotion_list.append(row[1])
+                            promotion_list[tier].append(row[1])
                         elif place == 1:
-                            promotion_qualifiers.append(row[1])
+                            promotion_qualifiers[tier].append(row[1])
                     if tier != len([name for name in os.listdir(league_file)]):
                         if place in (9, 10, 11):
-                            demotion_list.append(row[1])
+                            demotion_list[tier].append(row[1])
                         if place == 8:
-                            demotion_qualifiers.append(row[1])
-                    place = 0
+                            demotion_qualifiers[tier].append(row[1])
+                    place += 1
+    return {"promotion": promotion_list, "demotion": demotion_list, "prom_playoff": promotion_qualifiers,
+            "dem_playoff": demotion_qualifiers}
 
-        # create various promotion pools from each league.
-    pass
+def run_playoffs(promotions):
+    for tier in range(1, len(promotions["promotion"])):
+        pass
 
 
 def create_cup_fixtures(tier):
