@@ -39,19 +39,17 @@ class LeagueTable:
             ids = ids + ["BYE"]
 
         for i in range(len(ids)-1):
-
             mid = int(len(ids) / 2)
             l1 = ids[:mid]
             l2 = ids[mid:]
             l2.reverse()
-
             # Switch sides after each week
             if i % 2 == 1:
                 s = s + [zip(l1, l2)]
             else:
                 s = s + [zip(l2, l1)]
-
             ids.insert(1, ids.pop())
+
         week_count = 1
         fixtures = {}
         for week in s:
