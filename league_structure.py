@@ -78,12 +78,12 @@ def run_playoffs(promotions):
                 team = randint(0, len(promotions["prom_playoff"][tier]))
                 play_offs[tier * 100 + league].append(promotions["prom_playoff"][tier+1][team])
                 del promotions["prom_playoff"][tier + 1][team]
-    # create a yaml file with the schedule
+    # TODO: create a yaml file with the schedule
     # also include auto promote/demote teams - maybe a second yaml file?
 
-# create a function to run the games and add all the needed teams to the correct lists
+# TODO: create a function to run the games and add all the needed teams to the correct lists
 
-# create a function to take these from a file and enact/remove promotions
+# TODO: create a function to take these from a file and enact/remove promotions
 # delete yaml files.  Have season files?  maybe in league file name
 
 def create_cup_fixtures(tier):
