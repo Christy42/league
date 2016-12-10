@@ -68,22 +68,34 @@ def enact_promotions(league_file):
     return {"promotion": promotion_list, "demotion": demotion_list, "prom_playoff": promotion_qualifiers,
             "dem_playoff": demotion_qualifiers}
 
-def run_playoffs(promotions):
+def run_playoffs(promotions, league_folder):
     play_offs = {}
     for tier in range(1, len(promotions["promotion"])):
+        play_offs[tier] = []
         for league in range(max(1, (tier - 1) * 3)):
-            play_offs[tier * 100 + league] = []
-            play_offs[tier * 100 + league].append(promotions["dem_playoff"][tier][0])
-            for i in range(3):
-                team = randint(0, len(promotions["prom_playoff"][tier]))
-                play_offs[tier * 100 + league].append(promotions["prom_playoff"][tier+1][team])
-                del promotions["prom_playoff"][tier + 1][team]
-    # create a yaml file with the schedule
-    # also include auto promote/demote teams - maybe a second yaml file?
+            play_offs[tier][league] = []
+            play_offs[tier][league].append(promotions["dem_playoff"][tier][league])
+            if tier < len(promotions["promotion"]):
+                for i in range(3):
+                    team = randint(0, len(promotions["prom_playoff"][tier+1]))
+                    play_offs[tier][league].append(promotions["prom_playoff"][tier+1][team])
+                    del promotions["prom_playoff"][tier + 1][team]
+                for i in range(3):
+                    team = randint(0, len(promotions["promotion"][tier+1]))
+                    play_offs[tier][league].append(promotions["promotion"][tier+1][team])
+                    del promotions["promotion"][tier + 1][team]
+            if tier > 1:
+                team = randint(0, len(promotions["demotion"][tier - 1]))
+                play_offs[tier][league].append(promotions["demotion"][tier - 1][team])
+                del promotions["demotion"][tier - 1][team]
+            with open(league_folder + "//" + str(tier) + "//" + str(league) + "//playoff.yaml", "w") as file:
+                yaml.safe_dump(file, play_offs)
 
-# create a function to run the games and add all the needed teams to the correct lists
+# TODO: create a function to run the games and add all the needed teams to the correct lists
+def run_play_offs(league_folder):
+    
 
-# create a function to take these from a file and enact/remove promotions
+# TODO: create a function to take these from a file and enact/remove promotions
 # delete yaml files.  Have season files?  maybe in league file name
 
 def create_cup_fixtures(tier):
