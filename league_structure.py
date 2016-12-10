@@ -93,7 +93,11 @@ def run_playoffs(promotions, league_folder):
 
 # TODO: create a function to run the games and add all the needed teams to the correct lists
 def run_play_offs(league_folder):
-    
+    for tier in range(1, len([name for name in os.listdir(league_folder)]) + 1):
+        for league in range(max(1, (tier - 1) * 3)):
+            with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//playoff.yaml", "r") as file:
+                play_offs = yaml.safe_load(file)
+            
 
 # TODO: create a function to take these from a file and enact/remove promotions
 # delete yaml files.  Have season files?  maybe in league file name
