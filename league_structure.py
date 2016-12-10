@@ -97,7 +97,12 @@ def run_play_offs(league_folder):
         for league in range(max(1, (tier - 1) * 3)):
             with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//playoff.yaml", "r") as file:
                 play_offs = yaml.safe_load(file)
-            
+            # TODO: play the games and make one the winner
+            del play_offs[2]
+            del play_offs[3]
+            del play_offs[1]
+            with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//playoff.yaml", "w") as file:
+                yaml.safe_dump(play_offs, file)
 
 # TODO: create a function to take these from a file and enact/remove promotions
 # delete yaml files.  Have season files?  maybe in league file name
