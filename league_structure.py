@@ -26,19 +26,21 @@ def create_tier(tier):
     with open("leagues//season_number.yaml", "r") as file:
         season_number = yaml.safe_load(file)
     base_name = "leagues//" + str(season_number)
+    if not os.path.exists(base_name):
+        os.makedirs(base_name)
     for i in range(max(3 ** (tier - 1), 1)):
         league_name = chr(tier - 1 + ord('a')) + " " + str(i)
         if not os.path.exists(base_name + "//" + str(tier)):
-            os.makedirs(base_name)
+            os.makedirs(base_name + "//" + str(tier))
         team = {}
         country = ["Ireland", "United Kingdom", "United States of America", "Canada", "Australia"]
         for _ in range(12):
             t = create_team(country[randint(0, 4)], str(tier) + " " + str(i))
             team.update({t: t})
-        with open("leagues//" + str(tier) + "//" + league_name + ".yaml", "w") as file:
+        with open(base_name + "//" + str(tier) + "//" + league_name + "//" + "teams.yaml", "w") as file:
             yaml.safe_dump({"leagues name": league_name, "teams": list(team.keys())}, file)
-        league = LeagueTable(team, "leagues//" + str(tier) + "//" + league_name + "-schedule.yaml",
-                             "leagues//" + str(tier) + "//" + league_name + ".csv", league_name)
+        league = LeagueTable(team, base_name + "//" + str(tier) + "//" + league_name + "//schedule.yaml",
+                             base_name + "//" + str(tier) + "//" + league_name + "//table.csv", league_name)
         league.create_schedule()
         league.initialise_file()
         # TODO: create leagues table and fixture list file
