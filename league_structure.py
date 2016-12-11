@@ -18,8 +18,8 @@ import csv
 
 from random import randint
 
-from League.create_team import create_team
-from League.league import LeagueTable
+from create_team import create_team
+from league import LeagueTable
 
 
 def create_tier(tier):
@@ -89,13 +89,30 @@ def run_playoffs(promotions, league_folder):
                 play_offs[tier][league].append(promotions["demotion"][tier - 1][team])
                 del promotions["demotion"][tier - 1][team]
             with open(league_folder + "//" + str(tier) + "//" + str(league) + "//playoff.yaml", "w") as file:
-                yaml.safe_dump(file, play_offs)
+                yaml.safe_dump(play_offs, file)
 
 # TODO: create a function to run the games and add all the needed teams to the correct lists
 def run_play_offs(league_folder):
-    
+    for tier in range(1, len([name for name in os.listdir(league_folder)]) + 1):
+        for league in range(max(1, (tier - 1) * 3)):
+            with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//playoff.yaml", "r") as file:
+                play_offs = yaml.safe_load(file)
+            # TODO: play the games and make one the winner
+            del play_offs[2]
+            del play_offs[3]
+            del play_offs[1]
+            with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//playoff.yaml", "w") as file:
+                yaml.safe_dump(play_offs, file)
 
 # TODO: create a function to take these from a file and enact/remove promotions
+def change_files_promotions(league_folder):
+    for tier in range(1, len([name for name in os.listdir(league_folder)]) + 1):
+        for league in range(max(1, (tier - 1) * 3)):
+            with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//playoff.yaml", "r") as file:
+                play_offs = yaml.safe_load(file)
+            with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//league.yaml", "r") as file:
+                teams = yaml.safe_load(file)
+            teams += play_offs
 # delete yaml files.  Have season files?  maybe in league file name
 
 def create_cup_fixtures(tier):
