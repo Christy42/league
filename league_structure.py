@@ -39,11 +39,12 @@ def create_tier(tier):
             team.update({t: t})
         with open(base_name + "//" + str(tier) + "//" + league_name + "//" + "teams.yaml", "w") as file:
             yaml.safe_dump({"leagues name": league_name, "teams": list(team.keys())}, file)
+        with open(base_name + "cup_fixtures.yaml", "a") as file:
+            yaml.safe_dump([1] + list(team.keys()), file)
         league = LeagueTable(team, base_name + "//" + str(tier) + "//" + league_name + "//schedule.yaml",
                              base_name + "//" + str(tier) + "//" + league_name + "//table.csv", league_name)
         league.create_schedule()
         league.initialise_file()
-        # TODO: create leagues table and fixture list file
 
 
 def enact_promotions(league_file):
@@ -120,27 +121,26 @@ def change_files_promotions(league_folder):
             teams += play_offs
 # delete yaml files.  Have season files?  maybe in leagues file name
 
-def create_cup_fixtures(tier):
-    no_of_teams = 0
-    count = tier - 1
-    while count > 0:
-        no_of_teams += 12 * 3 ** count
-        count -= 1
+def create_cup_fixtures(league_folder):
+    with open(league_folder + "//cup_fixtures.yaml") as file:
+        teams = yaml.safe_load(file)
+    round_of_cup = teams[0]
+    teams = teams[1:]
+    no_of_teams = len(teams)
     no_of_byes = shift_bit_length(no_of_teams) - no_of_teams
-    # TODO: Add all team ids of these to a list properly
-    list_of_teams = []
-    for i in range(no_of_teams):
-        list_of_teams.append(i)
-    list_of_teams += ["BYE"] * no_of_byes
+
+    teams += ["BYE"] * no_of_byes
     fixtures = []
-    print(len(list_of_teams))
-    print(no_of_byes)
-    assert len(list_of_teams) - shift_bit_length(len(list_of_teams)) == 0
-    while len(list_of_teams) > 0:
-        team_played = randint(1, len(list_of_teams) - 1)
-        fixtures.append((list_of_teams[0], list_of_teams[team_played]))
-        list_of_teams.remove(list_of_teams[team_played])
-        list_of_teams.remove(list_of_teams[0])
+    assert len(teams) - shift_bit_length(len(teams)) == 0
+    while len(teams) > 0:
+        match = []
+        for i in range(1):
+            team_playing = randint(0, len(teams) - 1)
+            match.append(teams[team_playing])
+            teams.remove(teams[team_playing])
+        fixtures.append((match[0], match[1]))
+    with open(league_folder + "//round_" + round_of_cup + ".yaml") as file:
+        yaml.safe_load(fixtures, file)
     return fixtures
 
 
@@ -148,6 +148,8 @@ def shift_bit_length(x):
     return 1 << (x-1).bit_length()
 
 
-def play_cup_fixtures():
+def play_cup_fixtures(league_folder):
     # TODO: Remember that we need to create the next fixtures as well
-    pass
+    # TODO: Don't create fixtures, simply create list of teams for the next one and call create cup fixtures
+
+    create_cup_fixtures(league_folder)
