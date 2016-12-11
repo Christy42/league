@@ -131,7 +131,6 @@ def create_cup_fixtures(league_folder):
 
     teams += ["BYE"] * no_of_byes
     fixtures = []
-    assert len(teams) - shift_bit_length(len(teams)) == 0
     while len(teams) > 0:
         match = []
         for i in range(1):
@@ -149,7 +148,16 @@ def shift_bit_length(x):
 
 
 def play_cup_fixtures(league_folder):
-    # TODO: Remember that we need to create the next fixtures as well
-    # TODO: Don't create fixtures, simply create list of teams for the next one and call create cup fixtures
+    with open(league_folder + "//cup_fixtures.yaml", "r") as file:
+        teams = yaml.safe_load(file)
+    with open(league_folder + "//round_" + teams[0] + ".yaml", "r") as file:
+        fixtures = yaml.safe_load(file)
 
+    winners = [teams[0] + 1]
+    for fixture in fixtures:
+        # TODO: Actually play cup fixtures
+        winner = randint(0, 1)
+        winners.append(fixture[winner])
+    with open(league_folder + "//cup_fixtures.yaml", "w") as file:
+        yaml.safe_dump(winners, file)
     create_cup_fixtures(league_folder)
