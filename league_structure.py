@@ -23,22 +23,25 @@ from league import LeagueTable
 
 
 def create_tier(tier):
+    with open("leagues//season_number.yaml", "r") as file:
+        season_number = yaml.safe_load(file)
+    base_name = "leagues//" + str(season_number)
     for i in range(max(3 ** (tier - 1), 1)):
         league_name = chr(tier - 1 + ord('a')) + " " + str(i)
-        if not os.path.exists("leagues//" + str(tier)):
-            os.makedirs("leagues//" + str(tier))
+        if not os.path.exists(base_name + "//" + str(tier)):
+            os.makedirs(base_name)
         team = {}
         country = ["Ireland", "United Kingdom", "United States of America", "Canada", "Australia"]
         for _ in range(12):
             t = create_team(country[randint(0, 4)], str(tier) + " " + str(i))
             team.update({t: t})
         with open("leagues//" + str(tier) + "//" + league_name + ".yaml", "w") as file:
-            yaml.safe_dump({"league name": league_name, "teams": list(team.keys())}, file)
+            yaml.safe_dump({"leagues name": league_name, "teams": list(team.keys())}, file)
         league = LeagueTable(team, "leagues//" + str(tier) + "//" + league_name + "-schedule.yaml",
                              "leagues//" + str(tier) + "//" + league_name + ".csv", league_name)
         league.create_schedule()
         league.initialise_file()
-        # TODO: create league table and fixture list file
+        # TODO: create leagues table and fixture list file
 
 
 def enact_promotions(league_file):
@@ -110,10 +113,10 @@ def change_files_promotions(league_folder):
         for league in range(max(1, (tier - 1) * 3)):
             with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//playoff.yaml", "r") as file:
                 play_offs = yaml.safe_load(file)
-            with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//league.yaml", "r") as file:
+            with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//leagues.yaml", "r") as file:
                 teams = yaml.safe_load(file)
             teams += play_offs
-# delete yaml files.  Have season files?  maybe in league file name
+# delete yaml files.  Have season files?  maybe in leagues file name
 
 def create_cup_fixtures(tier):
     no_of_teams = 0

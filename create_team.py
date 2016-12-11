@@ -7,7 +7,7 @@ def create_team(nationality, league_name):
     with open("teams//team_names.yaml", "r") as file:
         names = yaml.safe_load(file)
     new_name = smallest_missing_in_list(names)
-    to_write = {"nationality": nationality, "league name": league_name, "bot": True}
+    to_write = {"nationality": nationality, "leagues name": league_name, "bot": True}
     if not names:
         names = [0]
     else:

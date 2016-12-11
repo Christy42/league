@@ -160,7 +160,7 @@ class LeagueTable:
 
 # TODO: Create set of leagues each with 12 teams.  Sets us a schedule and holds it ready to play
 
-# TODO: Amend league files on the basis of the games
+# TODO: Amend leagues files on the basis of the games
 
 # TODO: Amend stat files on the basis of the games for both teams and players
 

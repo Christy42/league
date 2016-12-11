@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 
 setup(
-    name="league",
+    name="leagues",
     author="Mark Christiansen",
     url="N/A",
     author_email="mark.christiansen@nuim.ie",
