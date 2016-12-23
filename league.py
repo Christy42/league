@@ -2,6 +2,8 @@ import csv
 import yaml
 import pandas
 
+from random import randint
+
 
 # reorder columns
 def set_column_sequence(dataframe, seq, front=True):
@@ -65,9 +67,18 @@ class LeagueTable:
     def play_week(self, week_number):
         with open(self._yaml_file, "r") as file:
             games = yaml.safe_load(file)[week_number]
+        scores = []
+        print(self._yaml_file)
+        print(games)
         for g in games:
-            pass
-        # Something something update scores
+            print(g)
+            print(games[g])
+            # Looking for [team_id, for]
+            result_0 = [games[g][0], randint(0, 30)]
+            result_1 = [games[g][1], randint(0, 30)]
+            scores.append((result_0, result_1))
+        # Need to actually play the above games
+        self.update_scores(scores)
 
     def change_name(self, team_id, new_name):
         with open(self._csv_file, "r") as file:
@@ -138,7 +149,8 @@ class LeagueTable:
                  int(stats["against"][stats["team id"].index(result_1[0])]))
         stats_1 = pandas.DataFrame(stats)
         # TODO: Sort the values
-        cols = set_column_sequence(stats_1, ["team name", "team id", "played", "wins", "draws", "losses", "win%", "for",
+        cols = set_column_sequence(stats_1, ["position", "team name", "team id", "played", "wins", "draws", "losses",
+                                             "win%", "for",
                                              "against", "points difference"])
         with open(self._csv_file, "w") as file:
             file.write(cols.to_csv())

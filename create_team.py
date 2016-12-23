@@ -4,7 +4,7 @@ from random import randint
 
 
 def create_team(nationality, league_name):
-    with open("teams//team_names.yaml", "r") as file:
+    with open("teams//ref//team_names.yaml", "r") as file:
         names = yaml.safe_load(file)
     new_name = smallest_missing_in_list(names)
     to_write = {"nationality": nationality, "leagues name": league_name, "bot": True}
@@ -14,7 +14,7 @@ def create_team(nationality, league_name):
         names = names[:new_name] + [new_name] + names[new_name:]
     team_name = "Team_" + str(new_name)
     to_write["team name"] = team_name
-    with open("teams//team_names.yaml", "w") as file:
+    with open("teams//ref//team_names.yaml", "w") as file:
         yaml.safe_dump(names, file)
     to_write["player"] = []
     for i in range(22):
@@ -65,7 +65,7 @@ def create_team(nationality, league_name):
 
 
 def create_player(nationality):
-    with open("players//player_id.yaml", "r") as file:
+    with open("players//ref//player_id.yaml", "r") as file:
         names = yaml.safe_load(file)
     new_name = smallest_missing_in_list(names)
     if names:
@@ -73,11 +73,11 @@ def create_player(nationality):
     else:
         names = [0]
     player_id = "Player_" + str(new_name)
-    with open("players//player_id.yaml", "w") as file:
+    with open("players//ref//player_id.yaml", "w") as file:
         yaml.safe_dump(names, file)
     player = dict()
     player["name"] = name_player(nationality)
-    with open("players//player_stats.yaml", "r") as file:
+    with open("players//ref//player_stats.yaml", "r") as file:
         att = yaml.safe_load(file)
     low_att = att["low attributes"]
     pos_att = att["positional attributes"]

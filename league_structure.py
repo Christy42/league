@@ -37,14 +37,39 @@ def create_tier(tier):
         for _ in range(12):
             t = create_team(country[randint(0, 4)], str(tier) + " " + str(i))
             team.update({t: t})
+        print(i)
+        if not os.path.exists(base_name + "//" + str(tier) + "//" + league_name):
+            os.makedirs(base_name + "//" + str(tier) + "//" + league_name)
         with open(base_name + "//" + str(tier) + "//" + league_name + "//" + "teams.yaml", "w") as file:
             yaml.safe_dump({"leagues name": league_name, "teams": list(team.keys())}, file)
-        with open(base_name + "cup_fixtures.yaml", "a") as file:
-            yaml.safe_dump([1] + list(team.keys()), file)
+        with open(base_name + "cup_fixtures.yaml", "r") as file:
+            cup_teams = yaml.safe_load(file)
+        if cup_teams is None:
+            cup_teams = []
+        else:
+            cup_teams = cup_teams[1:]
+        cup_teams += list(team.keys())
+        with open(base_name + "cup_fixtures.yaml", "w") as file:
+            yaml.safe_dump([1] + cup_teams, file)
         league = LeagueTable(team, base_name + "//" + str(tier) + "//" + league_name + "//schedule.yaml",
                              base_name + "//" + str(tier) + "//" + league_name + "//table.csv", league_name)
         league.create_schedule()
         league.initialise_file()
+
+
+def play_week(week_number, league_folder):
+    for tier in os.listdir(league_folder):
+        for league in os.listdir(league_folder + "//" + str(tier)):
+
+            with open(league_folder + "//" + str(tier) + "//" + league + "//teams.yaml", "r") as file:
+                ids = yaml.safe_load(file)["teams"]
+            # TODO: Create League Class here
+            leagues = LeagueTable(team_ids=ids,
+                                  yaml_file=league_folder + "//" + str(tier) + "//" + league + "//schedule.yaml",
+                                  csv_file=league_folder + "//" + str(tier) + "//" + league + "//table.csv",
+                                  name=league)
+
+            leagues.play_week(week_number)
 
 
 def enact_promotions(league_file):
@@ -74,6 +99,7 @@ def enact_promotions(league_file):
     return {"promotion": promotion_list, "demotion": demotion_list, "prom_playoff": promotion_qualifiers,
             "dem_playoff": demotion_qualifiers}
 
+
 def run_playoffs(promotions, league_folder):
     play_offs = {}
     for tier in range(1, len(promotions["promotion"])):
@@ -97,6 +123,7 @@ def run_playoffs(promotions, league_folder):
             with open(league_folder + "//" + str(tier) + "//" + str(league) + "//playoff.yaml", "w") as file:
                 yaml.safe_dump(play_offs, file)
 
+
 # TODO: create a function to run the games and add all the needed teams to the correct lists
 def run_play_offs(league_folder):
     for tier in range(1, len([name for name in os.listdir(league_folder)]) + 1):
@@ -110,6 +137,7 @@ def run_play_offs(league_folder):
             with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//playoff.yaml", "w") as file:
                 yaml.safe_dump(play_offs, file)
 
+
 # TODO: create a function to take these from a file and enact/remove promotions
 def change_files_promotions(league_folder):
     for tier in range(1, len([name for name in os.listdir(league_folder)]) + 1):
@@ -120,6 +148,7 @@ def change_files_promotions(league_folder):
                 teams = yaml.safe_load(file)
             teams += play_offs
 # delete yaml files.  Have season files?  maybe in leagues file name
+
 
 def create_cup_fixtures(league_folder):
     with open(league_folder + "//cup_fixtures.yaml") as file:
