@@ -1,6 +1,7 @@
 import csv
 import yaml
 import pandas
+import operator
 
 from random import randint
 
@@ -93,16 +94,16 @@ class LeagueTable:
             stats = {}
             title_row = []
             for row in reader:
-                if count_row % 2 == 0:
-                    if count_row == 0:
-                        title_row = row[1:]
-                        stats = {row[i]: [] for i in range(1, len(row))}
-                    else:
-                        for i in range(0, len(row[1:])):
-                            stats[title_row[i]].append(row[i+1])
+                if count_row == 0:
+                    title_row = row[1:]
+                    stats = {row[i]: [] for i in range(1, len(row))}
+                else:
+                    for i in range(0, len(row[1:])):
+                        stats[title_row[i]].append(row[i+1])
                 count_row += 1
         # TODO: Amend the values
         for result_0, result_1 in scores:
+            print(stats)
             stats["played"][stats["team id"].index(result_0[0])] = stats["played"][stats["team id"].index(result_0[0])]
             stats["played"][stats["team id"].index(result_0[0])] = \
                 int(stats["played"][stats["team id"].index(result_0[0])]) + 1
@@ -139,6 +140,8 @@ class LeagueTable:
                 ((int(stats["wins"][stats["team id"].index(result_1[0])]) +
                  int(stats["draws"][stats["team id"].index(result_1[0])]) / 2) /
                  int(stats["played"][stats["team id"].index(result_1[0])]))
+            stats["win%"][stats["team id"].index(result_1[0])] = \
+                str(round(float(stats["win%"][stats["team id"].index(result_1[0])]), 2) * 100) + "%"
             stats["wins"][stats["team id"].index(result_0[0])] = int(stats["wins"][stats["team id"].index(result_0[0])])
             stats["wins"][stats["team id"].index(result_1[0])] = int(stats["wins"][stats["team id"].index(result_1[0])])
             stats["points difference"][stats["team id"].index(result_0[0])] = \
@@ -147,6 +150,8 @@ class LeagueTable:
             stats["points difference"][stats["team id"].index(result_1[0])] = \
                 (int(stats["for"][stats["team id"].index(result_1[0])]) -
                  int(stats["against"][stats["team id"].index(result_1[0])]))
+        print(stats)
+        stats["position"] = [x for x in range(1, 13)]
         stats_1 = pandas.DataFrame(stats)
         # TODO: Sort the values
         cols = set_column_sequence(stats_1, ["position", "team name", "team id", "played", "wins", "draws", "losses",
