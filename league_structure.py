@@ -42,14 +42,14 @@ def create_tier(tier):
             os.makedirs(base_name + "//" + str(tier) + "//" + league_name)
         with open(base_name + "//" + str(tier) + "//" + league_name + "//" + "teams.yaml", "w") as file:
             yaml.safe_dump({"leagues name": league_name, "teams": list(team.keys())}, file)
-        with open(base_name + "cup_fixtures.yaml", "r") as file:
+        with open(base_name + "//cup_fixtures.yaml", "r") as file:
             cup_teams = yaml.safe_load(file)
         if cup_teams is None:
             cup_teams = []
         else:
             cup_teams = cup_teams[1:]
         cup_teams += list(team.keys())
-        with open(base_name + "cup_fixtures.yaml", "w") as file:
+        with open(base_name + "//cup_fixtures.yaml", "w") as file:
             yaml.safe_dump([1] + cup_teams, file)
         league = LeagueTable(team, base_name + "//" + str(tier) + "//" + league_name + "//schedule.yaml",
                              base_name + "//" + str(tier) + "//" + league_name + "//table.csv", league_name)
@@ -157,19 +157,28 @@ def create_cup_fixtures(league_folder):
     teams = teams[1:]
     no_of_teams = len(teams)
     no_of_byes = shift_bit_length(no_of_teams) - no_of_teams
-
+    print(no_of_byes)
     teams += ["BYE"] * no_of_byes
     fixtures = []
     while len(teams) > 0:
-        match = []
-        for i in range(1):
-            team_playing = randint(0, len(teams) - 1)
-            match.append(teams[team_playing])
-            teams.remove(teams[team_playing])
+        print(len(teams))
+        count = 0
+        team_playing = randint(0, len(teams) - 1)
+        team_playing_2 = team_playing
+        while teams[team_playing] == teams[team_playing_2]:
+            count += 1
+            team_playing_2 = randint(0, len(teams) - 1)
+            if count > 15:
+                return -1
+        match = [teams[team_playing], teams[team_playing_2]]
+        if count > 15:
+            return -1
         fixtures.append((match[0], match[1]))
-    with open(league_folder + "//round_" + round_of_cup + ".yaml") as file:
-        yaml.safe_load(fixtures, file)
-    return fixtures
+        teams.remove(match[0])
+        teams.remove(match[1])
+    with open(league_folder + "//round_" + str(round_of_cup) + ".yaml", "w") as file:
+        yaml.safe_dump(fixtures, file)
+    return 0
 
 
 def shift_bit_length(x):
@@ -179,13 +188,19 @@ def shift_bit_length(x):
 def play_cup_fixtures(league_folder):
     with open(league_folder + "//cup_fixtures.yaml", "r") as file:
         teams = yaml.safe_load(file)
-    with open(league_folder + "//round_" + teams[0] + ".yaml", "r") as file:
+    with open(league_folder + "//round_" + str(teams[0]) + ".yaml", "r") as file:
         fixtures = yaml.safe_load(file)
 
     winners = [teams[0] + 1]
     for fixture in fixtures:
         # TODO: Actually play cup fixtures
-        winner = randint(0, 1)
+
+        if fixture[0] == "BYE":
+            winner = 1
+        elif fixture[1] == "BYE":
+            winner = 0
+        else:
+            winner = randint(0, 1)
         winners.append(fixture[winner])
     with open(league_folder + "//cup_fixtures.yaml", "w") as file:
         yaml.safe_dump(winners, file)
