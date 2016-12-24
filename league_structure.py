@@ -157,11 +157,9 @@ def create_cup_fixtures(league_folder):
     teams = teams[1:]
     no_of_teams = len(teams)
     no_of_byes = shift_bit_length(no_of_teams) - no_of_teams
-    print(no_of_byes)
     teams += ["BYE"] * no_of_byes
     fixtures = []
     while len(teams) > 0:
-        print(len(teams))
         count = 0
         team_playing = randint(0, len(teams) - 1)
         team_playing_2 = team_playing
@@ -205,3 +203,37 @@ def play_cup_fixtures(league_folder):
     with open(league_folder + "//cup_fixtures.yaml", "w") as file:
         yaml.safe_dump(winners, file)
     create_cup_fixtures(league_folder)
+
+
+def end_of_season():
+    # TODO: Do promotion stuff
+    # Retire players/announce retirements
+    # Age players
+    # Change contract details
+    # Create list of free agent players (with old teams)
+    # sort out who is in what league
+    # iterate season number
+    # create tiers from preset lists of teams
+    pass
+
+
+def age_players(player_folder):
+    for file in os.listdir(player_folder):
+        if ".yaml" in file:
+            with open(player_folder + "//" + file, "r") as player_file:
+                player_stats = yaml.safe_load(player_file)
+            player_stats["age"] += 1
+            if player_stats["retiring"]:
+                os.remove(player_folder + "//" + file)
+                with open(player_folder + "//ref//player_id.yaml", "r") as player_names:
+                    names = yaml.safe_load(player_names)
+                player_no = file[:len(file) - 5]
+                player_no = player_no[7:]
+                names.remove(int(player_no))
+                with open(player_folder + "//ref//player_id.yaml", "w") as player_names:
+                    yaml.safe_dump(names, player_names)
+            else:
+                if randint(32, 37) < player_stats["age"]:
+                    player_stats["retiring"] = False
+                with open(player_folder + "//" + file, "w") as player_file:
+                    yaml.safe_dump(player_stats, player_file)
