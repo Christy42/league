@@ -87,6 +87,7 @@ def create_player(nationality):
     player["contract_value"] = 0
     player["guarantee"] = 0
     player["years_left"] = 0
+    player["retiring"] = False
     for attribute in low_att:
         player[attribute] = 100 + randint(0, 300)
     for attribute in pos_att:
@@ -96,7 +97,7 @@ def create_player(nationality):
                                    randint(0, 500) + randint(0, 500) + randint(0, 500)) / 5
     with open("players//" + player_id + ".yaml", "w") as file:
         yaml.safe_dump(player, file)
-    training = {"file name": "players//" + player_id + ".yaml", "focus": [], "route assignment": []}
+    training = {"file name": "players//" + player_id + ".yaml", "focus": "", "route assignment": ""}
     with open("players//training//" + player_id + ".yaml", "w") as file:
         yaml.safe_dump(training, file)
     return player_id
