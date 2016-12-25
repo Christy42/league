@@ -1,4 +1,5 @@
 import yaml
+import os
 
 from random import randint
 
@@ -133,3 +134,34 @@ def name_player(nationality):
     first_name = names[nationality]["first"][random_first]
     second_name = names[nationality]["second"][random_second]
     return first_name + " " + second_name
+
+
+def add_player(team_id, team_folder):
+    with open(team_folder + "//" + team_id + ".yaml", "r") as team_file:
+        team = yaml.safe_load(team_file)
+    team_name = team["team name"]
+    team["players"].append(create_player(team["nationality"], team_name, team_id))
+    with open(team_folder + "//" + team_id + ".yaml", "w") as team_file:
+        yaml.safe_dump(team, team_file)
+
+
+def add_player_old(team_id, team_folder, player_folder, player_id):
+    with open(team_folder + "//" + team_id + ".yaml", "r") as team_file:
+        team = yaml.safe_load(team_file)
+    team["players"].append(player_id)
+    with open(team_folder + "//" + team_id + ".yaml", "w") as team_file:
+        yaml.safe_dump(team, team_file)
+    with open(player_folder + "//" + player_id + ".yaml", "r") as player_file:
+        player = yaml.safe_load(player_file)
+    player["team_id"] = team_id
+    player["team"] = team["team name"]
+    with open(player_folder + "//" + player_id + ".yaml", "w") as player_file:
+        yaml.safe_dump(player, player_file)
+
+
+def ensure_team_has_minimum(team_folder, minimum):
+    for file in os.listdir(team_folder):
+        with open(team_folder + "//" + file, "r") as team_file:
+            team = yaml.safe_load(team_file)
+        while team["players"] < minimum:
+            add_player(file[:len(file) - 5], team_folder)
