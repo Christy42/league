@@ -18,8 +18,8 @@ def create_team(nationality, league_name):
         yaml.safe_dump(names, file)
     to_write["player"] = []
     for i in range(22):
-        to_write["player"].append(create_player(nationality))
-    with open("teams//" + team_name + ".yaml", "w") as file:
+        to_write["player"].append(create_player(nationality, team_name, team_name))
+    with open("teams//teams//" + team_name + ".yaml", "w") as file:
         yaml.safe_dump(to_write, file)
     with open("formation.yaml", "r") as file:
         formations = yaml.safe_load(file)
@@ -30,7 +30,7 @@ def create_team(nationality, league_name):
         starters[formation] = [to_write["player"][i] for i in range(11, 22)]
     for formation in formations["special"]:
         starters[formation] = [to_write["player"][i] for i in range(11)]
-    with open("teams//" + team_name + "-formation.yaml", "w") as file:
+    with open("teams//orders" + team_name + "-formation.yaml", "w") as file:
         yaml.safe_dump(starters, file)
     percentages = {"offense": dict(), "defense": dict()}
 
@@ -43,7 +43,7 @@ def create_team(nationality, league_name):
         plays = yaml.safe_load(file)
     for play in plays["offense"]:
         if play not in ["1 Deep Attack", "4 HB Dive", "1 Cross Up", "10 Double TE QB Sneak"]:
-            percentages["offense"][play] ={1: 0, 2: 0, 3: 0, 4: 0}
+            percentages["offense"][play] = {1: 0, 2: 0, 3: 0, 4: 0}
     for play in plays["defense"]:
         if play not in ["3-4-4 Cover 2", "4-3-4 Engage Eight", "4-4-3 Cover 3", "Dime Double Wide", "Nickel Double Z"]:
             percentages["defense"][play] = {"Shotgun": 0, "Spread": 0, "Double TE Set": 0, "I-Form": 0,
@@ -59,12 +59,12 @@ def create_team(nationality, league_name):
     percentages["defense"]["Nickel Double Z"] = {"Shotgun": 10, "Spread": 20, "Double TE Set": 20,
                                                  "I-Form": 20, "Singleback": 35}
     percentages["special"] = {"time between plays": 35, "field goal range": 20}
-    with open("teams//" + team_name + "-orders.yaml", "w") as file:
+    with open("teams//orders" + team_name + "-orders.yaml", "w") as file:
         yaml.safe_dump(percentages, file)
     return team_name
 
 
-def create_player(nationality):
+def create_player(nationality, team, team_id):
     with open("players//ref//player_id.yaml", "r") as file:
         names = yaml.safe_load(file)
     new_name = smallest_missing_in_list(names)
@@ -83,8 +83,9 @@ def create_player(nationality):
     pos_att = att["positional attributes"]
     high_att = att["high attributes"]
     player["nationality"] = nationality
-    player["contract_years"] = 0
-    player["contract_value"] = 0
+    player["team"] = team
+    player["team_id"] = team_id
+    player["contract_value"] = 1000
     player["guarantee"] = 0
     player["years_left"] = 0
     player["retiring"] = False
@@ -95,9 +96,9 @@ def create_player(nationality):
     for attribute in high_att:
         player[attribute] = 500 + (randint(0, 500) + randint(0, 500) +
                                    randint(0, 500) + randint(0, 500) + randint(0, 500)) / 5
-    with open("players//" + player_id + ".yaml", "w") as file:
+    with open("players//players//" + player_id + ".yaml", "w") as file:
         yaml.safe_dump(player, file)
-    training = {"file name": "players//" + player_id + ".yaml", "focus": "", "route assignment": ""}
+    training = {"file name": "players//players//" + player_id + ".yaml", "focus": "", "route assignment": ""}
     with open("players//training//" + player_id + ".yaml", "w") as file:
         yaml.safe_dump(training, file)
     return player_id

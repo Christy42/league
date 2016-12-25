@@ -59,17 +59,17 @@ def create_tier(tier):
 
 def play_week(week_number, league_folder):
     for tier in os.listdir(league_folder):
-        for league in os.listdir(league_folder + "//" + str(tier)):
+        if "cup" not in tier and "round" not in tier:
+            for league in os.listdir(league_folder + "//" + str(tier)):
+                with open(league_folder + "//" + str(tier) + "//" + league + "//teams.yaml", "r") as file:
+                    ids = yaml.safe_load(file)["teams"]
+                # TODO: Create League Class here
+                leagues = LeagueTable(team_ids=ids,
+                                      yaml_file=league_folder + "//" + str(tier) + "//" + league + "//schedule.yaml",
+                                      csv_file=league_folder + "//" + str(tier) + "//" + league + "//table.csv",
+                                      name=league)
 
-            with open(league_folder + "//" + str(tier) + "//" + league + "//teams.yaml", "r") as file:
-                ids = yaml.safe_load(file)["teams"]
-            # TODO: Create League Class here
-            leagues = LeagueTable(team_ids=ids,
-                                  yaml_file=league_folder + "//" + str(tier) + "//" + league + "//schedule.yaml",
-                                  csv_file=league_folder + "//" + str(tier) + "//" + league + "//table.csv",
-                                  name=league)
-
-            leagues.play_week(week_number)
+                leagues.play_week(week_number)
 
 
 def enact_promotions(league_file):
@@ -167,6 +167,7 @@ def create_cup_fixtures(league_folder):
             count += 1
             team_playing_2 = randint(0, len(teams) - 1)
             if count > 15:
+                print(teams[team_playing])
                 return -1
         match = [teams[team_playing], teams[team_playing_2]]
         if count > 15:
@@ -207,24 +208,25 @@ def play_cup_fixtures(league_folder):
 
 def end_of_season():
     # TODO: Do promotion stuff
-    # Retire players/announce retirements
-    # Age players
+    # Retire players/announce retirements Done
+    # Age players Done
     # Change contract details
     # Create list of free agent players (with old teams)
     # sort out who is in what league
     # iterate season number
     # create tiers from preset lists of teams
+    # ensure each team has minimum number of players by any means needed
     pass
 
 
-def age_players(player_folder):
+def age_players(player_folder, team_folder):
     for file in os.listdir(player_folder):
         if ".yaml" in file:
             with open(player_folder + "//" + file, "r") as player_file:
                 player_stats = yaml.safe_load(player_file)
             player_stats["age"] += 1
             if player_stats["retiring"]:
-                os.remove(player_folder + "//" + file)
+                os.remove(player_folder + "//players//" + file)
                 with open(player_folder + "//ref//player_id.yaml", "r") as player_names:
                     names = yaml.safe_load(player_names)
                 player_no = file[:len(file) - 5]
@@ -235,5 +237,23 @@ def age_players(player_folder):
             else:
                 if randint(32, 37) < player_stats["age"]:
                     player_stats["retiring"] = False
+                # Move player to free agency
+                if player_stats["years_left"] == 1:
+                    with open(team_folder + "//" + player_stats["team_id"] + ".yaml", "r") as file_team:
+                        team = yaml.safe_load(file_team)
+                    team["player"].remove(file[:len(file)-5])
+                    with open(team_folder + "//" + player_stats["team_id"] + ".yaml", "w") as file_team:
+                        yaml.safe_dump(team, file_team)
+                    with open(player_folder + "//free_agents.yaml", "r") as free_agent_file:
+                        free_agents = yaml.safe_load(free_agent_file)
+                    free_agents.update({file[:len(file)-5]: {"team_id": player_stats["team_id"],
+                                                             "team": player_stats["team"],
+                                                             "asking": 1000}})
+                    with open(player_folder + "//free_agents.yaml", "w") as free_agent_file:
+                        yaml.safe_dump(free_agents, free_agent_file)
+                    player_stats["team"] = "N/A"
+                    pass
+                else:
+                    player_stats["years_left"] = max(0, player_stats["years_left"] - 1)
                 with open(player_folder + "//" + file, "w") as player_file:
                     yaml.safe_dump(player_stats, player_file)

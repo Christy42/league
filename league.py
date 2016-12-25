@@ -150,7 +150,6 @@ class LeagueTable:
             stats["points difference"][stats["team id"].index(result_1[0])] = \
                 (int(stats["for"][stats["team id"].index(result_1[0])]) -
                  int(stats["against"][stats["team id"].index(result_1[0])]))
-        print(stats)
         stats["position"] = [x for x in range(1, 13)]
         stats_1 = pandas.DataFrame(stats)
         # TODO: Sort the values
