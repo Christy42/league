@@ -30,7 +30,7 @@ def create_team(nationality, league_name):
         starters[formation] = [to_write["player"][i] for i in range(11, 22)]
     for formation in formations["special"]:
         starters[formation] = [to_write["player"][i] for i in range(11)]
-    with open("teams//orders" + team_name + "-formation.yaml", "w") as file:
+    with open("teams//orders//" + team_name + "-formation.yaml", "w") as file:
         yaml.safe_dump(starters, file)
     percentages = {"offense": dict(), "defense": dict()}
 
@@ -59,7 +59,7 @@ def create_team(nationality, league_name):
     percentages["defense"]["Nickel Double Z"] = {"Shotgun": 10, "Spread": 20, "Double TE Set": 20,
                                                  "I-Form": 20, "Singleback": 35}
     percentages["special"] = {"time between plays": 35, "field goal range": 20}
-    with open("teams//orders" + team_name + "-orders.yaml", "w") as file:
+    with open("teams//orders//" + team_name + "-orders.yaml", "w") as file:
         yaml.safe_dump(percentages, file)
     return team_name
 
@@ -89,6 +89,7 @@ def create_player(nationality, team, team_id):
     player["guarantee"] = 0
     player["years_left"] = 0
     player["retiring"] = False
+    player["age"] = 16 + randint(0, 3)
     for attribute in low_att:
         player[attribute] = 100 + randint(0, 300)
     for attribute in pos_att:
