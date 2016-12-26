@@ -138,27 +138,29 @@ def name_player(nationality):
     return first_name + " " + second_name
 
 
-def add_player(team_id, team_folder):
+def add_player(team_id, team_folder, maximum):
     with open(team_folder + "//" + team_id + ".yaml", "r") as team_file:
         team = yaml.safe_load(team_file)
-    team_name = team["team name"]
-    team["players"].append(create_player(team["nationality"], team_name, team_id))
-    with open(team_folder + "//" + team_id + ".yaml", "w") as team_file:
-        yaml.safe_dump(team, team_file)
+    if team["player"] < maximum:
+        team_name = team["team name"]
+        team["player"].append(create_player(team["nationality"], team_name, team_id))
+        with open(team_folder + "//" + team_id + ".yaml", "w") as team_file:
+            yaml.safe_dump(team, team_file)
 
 
-def add_player_old(team_id, team_folder, player_folder, player_id):
+def add_player_old(team_id, team_folder, player_folder, player_id, maximum):
     with open(team_folder + "//" + team_id + ".yaml", "r") as team_file:
         team = yaml.safe_load(team_file)
-    team["players"].append(player_id)
-    with open(team_folder + "//" + team_id + ".yaml", "w") as team_file:
-        yaml.safe_dump(team, team_file)
-    with open(player_folder + "//" + player_id + ".yaml", "r") as player_file:
-        player = yaml.safe_load(player_file)
-    player["team_id"] = team_id
-    player["team"] = team["team name"]
-    with open(player_folder + "//" + player_id + ".yaml", "w") as player_file:
-        yaml.safe_dump(player, player_file)
+    if team["player"] < maximum:
+        team["player"].append(player_id)
+        with open(team_folder + "//" + team_id + ".yaml", "w") as team_file:
+            yaml.safe_dump(team, team_file)
+        with open(player_folder + "//" + player_id + ".yaml", "r") as player_file:
+            player = yaml.safe_load(player_file)
+        player["team_id"] = team_id
+        player["team"] = team["team name"]
+        with open(player_folder + "//" + player_id + ".yaml", "w") as player_file:
+            yaml.safe_dump(player, player_file)
 
 
 def ensure_team_has_minimum(team_folder, minimum):
@@ -175,7 +177,7 @@ def remove_player(player_id, player_folder, team_id, team_folder, minimum):
     with open(team_folder + "//teams//" + team_id + ".yaml") as team_file:
         team = yaml.safe_load(team_file)
     if len(team["player"]) > minimum:
-        team["players"].remove(player_id)
+        team["player"].remove(player_id)
         with open(team_folder + "//teams//" + team_id, "w") as team_file:
             yaml.safe_dump(team, team_file)
         with open(player_folder + "//players//" + player_id + ".yaml", "r") as player_file:

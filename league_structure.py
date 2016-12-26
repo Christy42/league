@@ -18,7 +18,7 @@ import csv
 
 from random import randint
 
-from create_team import create_team
+from create_team import create_team, remove_player
 from league import LeagueTable
 
 
@@ -266,3 +266,20 @@ def age_players(player_folder, team_folder):
                     player_stats["years_left"] = max(0, player_stats["years_left"] - 1)
                 with open(player_folder + "//" + file, "w") as player_file:
                     yaml.safe_dump(player_stats, player_file)
+
+
+def check_salary_cap(team_folder, player_folder, salary_cap):
+    for team_file in os.listdir(team_folder):
+        with open(team_folder + "//teams//" + team_file) as file:
+            team = yaml.safe_load(file)
+        players = team["player"]
+        salary = salary_c
+        while salary > salary_cap:
+        for player in players:
+            with open(player_folder + "//players//" + player + ".yaml") as player_file:
+                player_stats = yaml.safe_load(player_file)
+            salary += player_stats["contract_value"]
+
+            fired = randint(0, len(players))
+            remove_player(players[fired], player_folder, team_file[:len(team_file) - 5], team_folder, -1)
+            players.remove(players[fired])
