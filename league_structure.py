@@ -217,13 +217,15 @@ def end_of_season(league_folder):
     # Change contract details Done
     # Create list of free agent players (with old teams) Done
     # sort out who is in what league
+
     # iterate season number
     with open(league_folder + "//season_number.yaml", "r") as file:
         number = yaml.safe_load(file) + 1
     with open(league_folder + "//season_number.yaml", "w") as file:
         yaml.safe_dump(number, file) + 1
     # create tiers from preset lists of teams
-    # ensure each team has minimum number of players by any means needed
+    # ensure teams are not going over the maximum salary cap
+    # ensure each team has minimum number of players by any means needed Done
 
 
 def age_players(player_folder, team_folder):

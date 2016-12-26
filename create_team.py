@@ -22,6 +22,8 @@ def create_team(nationality, league_name):
         to_write["player"].append(create_player(nationality, team_name, team_name))
     with open("teams//teams//" + team_name + ".yaml", "w") as file:
         yaml.safe_dump(to_write, file)
+    with open("teams//dead_money//" + team_name + ".yaml", "w") as dead_money_file:
+        yaml.safe_dump({}, dead_money_file)
     with open("formation.yaml", "r") as file:
         formations = yaml.safe_load(file)
     starters = {}
@@ -161,7 +163,39 @@ def add_player_old(team_id, team_folder, player_folder, player_id):
 
 def ensure_team_has_minimum(team_folder, minimum):
     for file in os.listdir(team_folder):
-        with open(team_folder + "//" + file, "r") as team_file:
+        with open(team_folder + "//teams//" + file, "r") as team_file:
             team = yaml.safe_load(team_file)
-        while team["players"] < minimum:
+        while team["player"] < minimum:
             add_player(file[:len(file) - 5], team_folder)
+        with open(team_folder + "//teams//" + file, "w") as team_file:
+            yaml.safe_dump(team, team_file)
+
+
+def remove_player(player_id, player_folder, team_id, team_folder, minimum):
+    with open(team_folder + "//teams//" + team_id + ".yaml") as team_file:
+        team = yaml.safe_load(team_file)
+    if len(team["player"]) > minimum:
+        team["players"].remove(player_id)
+        with open(team_folder + "//teams//" + team_id, "w") as team_file:
+            yaml.safe_dump(team, team_file)
+        with open(player_folder + "//players//" + player_id + ".yaml", "r") as player_file:
+            player = yaml.safe_load(player_file)
+        player["team_id"] = "N/A"
+        team_name = player["team"]
+        player["team"] = "N/A"
+        with open(player_folder + "//players//" + player_id, "w") as player_file:
+            yaml.safe_dump(player, player_file)
+        with open(player_folder + "//free_agents.yaml", "r") as free_agent_file:
+            free_agents = yaml.safe_load(free_agent_file)
+        free_agents.update({player_id: {"team_id": team_id, "team": team_name, "asking": 1000}})
+        with open(player_folder + "//free_agents.yaml", "w") as free_agent_file:
+            yaml.safe_dump(free_agents, free_agent_file)
+        with open(team_folder + "//dead_money//" + team_id + ".yaml", "r") as dead_money_file:
+            dead_money = yaml.safe_load(dead_money_file)
+        dead_money.update({player_id: {"years": player["years_left"],
+                                       "amount": player["guarantee"] * player["contract_value"]}})
+        with open(team_folder + "//dead_money//" + team_id + ".yaml", "w") as dead_money_file:
+            yaml.safe_dump(dead_money, dead_money_file)
+    else:
+        # TODO: put in something to point out to the user that the player may not be removed
+        pass
