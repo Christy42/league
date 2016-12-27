@@ -9,9 +9,9 @@ from random import randint
 # reorder columns
 def set_column_sequence(dataframe, seq, front=True):
 
-     # Takes a dataframe and a subsequence of its columns,
-     #  returns dataframe with seq as first columns if "front" is True,
-     #  and seq as last columns if "front" is False.
+    # Takes a dataframe and a subsequence of its columns,
+    #  returns dataframe with seq as first columns if "front" is True,
+    #  and seq as last columns if "front" is False.
 
     cols = seq[:] # copy so we don't mutate seq
     for x in dataframe.columns:

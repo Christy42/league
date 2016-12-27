@@ -15,6 +15,7 @@ pool should contain 3 teams attempting promotion and 1 avoiding demotion).
 import yaml
 import os
 import csv
+import pandas
 
 from random import randint
 
@@ -273,13 +274,38 @@ def check_salary_cap(team_folder, player_folder, salary_cap):
         with open(team_folder + "//teams//" + team_file) as file:
             team = yaml.safe_load(file)
         players = team["player"]
-        salary = salary_c
-        while salary > salary_cap:
+        salaries = {}
         for player in players:
             with open(player_folder + "//players//" + player + ".yaml") as player_file:
-                player_stats = yaml.safe_load(player_file)
-            salary += player_stats["contract_value"]
+                salaries.update({player: yaml.safe_load(player_file)["contract_value"]})
+        salary = sum(list(salaries.values()))
+        while salary > salary_cap:
 
             fired = randint(0, len(players))
             remove_player(players[fired], player_folder, team_file[:len(team_file) - 5], team_folder, -1)
-            players.remove(players[fired])
+            salaries.pop(players[fired])
+            salary = sum(list(salaries.values()))
+
+
+def sort_league(league_folder):
+    """
+    :param league_folder: is the folder in which the 2 csv files and yaml files reside
+    :return:
+    """
+    with open(league_folder + "//" + "table.csv") as table_file:
+        table = csv.reader(table_file, delimiter=',', quotechar="~")
+        data = []
+        for row in table:
+            data.append(row)
+    headers = data.pop(0)
+    df = pandas.DataFrame(data, columns=headers)
+    df["rand"] = [randint(0, 10000) for _ in range(12)]
+    df.sort_values(by=["win%", "points difference", "for", "rand"], ascending=False)
+    del df["rand"]
+    df.to_csv(league_folder + "//" + "table.csv")
+
+
+def sort_entire_league(league_folder):
+    for tier_folder in os.listdir(league_folder):
+        for folder in os.listdir(league_folder + "//" + tier_folder):
+            sort_league(league_folder + "//" + tier_folder + "//" + folder)
