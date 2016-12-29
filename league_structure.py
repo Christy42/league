@@ -23,6 +23,42 @@ from create_team import create_team, remove_player
 from league import LeagueTable
 
 
+def create_tier_from_lists(list_of_teams):
+    """
+    :param list_of_teams: a list of lists, each list should contain 12 team ids
+    :return:
+    """
+    with open("leagues//season_number.yaml", "r") as file:
+        season_number = yaml.safe_load(file)
+    base_name = "leagues//" + str(season_number)
+    if not os.path.exists(base_name):
+        os.makedirs(base_name)
+    tier = 1
+    league_no = 0
+    for league in list_of_teams:
+        league_no += 1
+        if league_no >= max(1, tier * 3):
+            league_no = 0
+            tier += 1
+        league_name = chr(tier - 1 + ord('a')) + " " + str(league_no)
+        if not os.path.exists(base_name + "//" + str(tier)):
+            os.makedirs(base_name + "//" + str(tier))
+        if not os.path.exists(base_name + "//" + str(tier) + "//" + league_name):
+            os.makedirs(base_name + "//" + str(tier) + "//" + league_name)
+
+        with open(base_name + "//" + str(tier) + "//" + league_name + "//" + "teams.yaml", "w") as file:
+            yaml.safe_dump({"leagues name": league_name, "teams": list(team.keys())}, file)
+        with open(base_name + "//cup_fixtures.yaml", "r") as file:
+            cup_teams = yaml.safe_load(file)
+        if cup_teams is None:
+            cup_teams = []
+        else:
+            cup_teams = cup_teams[1:]
+        cup_teams += list(team.keys())
+        with open(base_name + "//cup_fixtures.yaml", "w") as file:
+            yaml.safe_dump([1] + cup_teams, file)
+
+
 def create_tier(tier):
     with open("leagues//season_number.yaml", "r") as file:
         season_number = yaml.safe_load(file)
@@ -173,7 +209,6 @@ def create_cup_fixtures(league_folder):
             count += 1
             team_playing_2 = randint(0, len(teams) - 1)
             if count > 15:
-                print(teams[team_playing])
                 return -1
         match = [teams[team_playing], teams[team_playing_2]]
         if count > 15:
@@ -302,10 +337,13 @@ def sort_league(league_folder):
     df["rand"] = [randint(0, 10000) for _ in range(12)]
     df.sort_values(by=["win%", "points difference", "for", "rand"], ascending=False)
     del df["rand"]
+    df["position"] = [x for x in range(1, 13)]
+
     df.to_csv(league_folder + "//" + "table.csv")
 
 
 def sort_entire_league(league_folder):
     for tier_folder in os.listdir(league_folder):
-        for folder in os.listdir(league_folder + "//" + tier_folder):
-            sort_league(league_folder + "//" + tier_folder + "//" + folder)
+        if "fixtures" not in tier_folder and "round" not in tier_folder:
+            for folder in os.listdir(league_folder + "//" + tier_folder):
+                sort_league(league_folder + "//" + tier_folder + "//" + folder)

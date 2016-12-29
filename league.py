@@ -69,11 +69,7 @@ class LeagueTable:
         with open(self._yaml_file, "r") as file:
             games = yaml.safe_load(file)[week_number]
         scores = []
-        print(self._yaml_file)
-        print(games)
         for g in games:
-            print(g)
-            print(games[g])
             # Looking for [team_id, for]
             result_0 = [games[g][0], randint(0, 30)]
             result_1 = [games[g][1], randint(0, 30)]
@@ -90,72 +86,75 @@ class LeagueTable:
         # TODO: Read in the values as some sort of structure, ignore first line and column though
         with open(self._csv_file, "r") as csv_file:
             reader = csv.reader(csv_file, delimiter=',')
-            count_row = 0
-            stats = {}
-            title_row = []
+            stats = []
             for row in reader:
-                if count_row == 0:
-                    title_row = row[1:]
-                    stats = {row[i]: [] for i in range(1, len(row))}
-                else:
-                    for i in range(0, len(row[1:])):
-                        stats[title_row[i]].append(row[i+1])
-                count_row += 1
-        # TODO: Amend the values
+                stats.append(row)
+
+        title_row = stats.pop(0)
+        stats = pandas.DataFrame(stats, columns=title_row)
+        # result_0 = [team id, score by team]
         for result_0, result_1 in scores:
-            print(stats)
-            stats["played"][stats["team id"].index(result_0[0])] = stats["played"][stats["team id"].index(result_0[0])]
-            stats["played"][stats["team id"].index(result_0[0])] = \
-                int(stats["played"][stats["team id"].index(result_0[0])]) + 1
-            stats["played"][stats["team id"].index(result_1[0])] = \
-                int(stats["played"][stats["team id"].index(result_1[0])]) + 1
-            stats["for"][stats["team id"].index(result_0[0])] = \
-                int(stats["for"][stats["team id"].index(result_0[0])]) + result_0[1]
-            stats["for"][stats["team id"].index(result_1[0])] = \
-                int(stats["for"][stats["team id"].index(result_1[0])]) + result_1[1]
-            stats["against"][stats["team id"].index(result_0[0])] = \
-                int(stats["against"][stats["team id"].index(result_0[0])]) + result_1[1]
-            stats["against"][stats["team id"].index(result_1[0])] = \
-                int(stats["against"][stats["team id"].index(result_1[0])]) + result_0[1]
-            if int(result_0[1]) > int(result_1[1]):
-                stats["wins"][stats["team id"].index(result_0[0])] = \
-                   int(stats["wins"][stats["team id"].index(result_0[0])]) + 1
-                stats["losses"][stats["team id"].index(result_1[0])] = \
-                    int(stats["losses"][stats["team id"].index(result_1[0])]) + 1
-            elif int(result_0[1]) == int(result_1[1]):
-                stats["draws"][stats["team id"].index(result_0[0])] = \
-                   int(stats["draws"][stats["team id"].index(result_0[0])]) + 1
-                stats["draws"][stats["team id"].index(result_1[0])] = \
-                    int(stats["draws"][stats["team id"].index(result_1[0])]) + 1
-            else:
-                stats["wins"][stats["team id"].index(result_1[0])] = \
-                   int(stats["wins"][stats["team id"].index(result_1[0])]) + 1
-                stats["losses"][stats["team id"].index(result_0[0])] = \
-                    int(stats["losses"][stats["team id"].index(result_0[0])]) + 1
-            stats["win%"][stats["team id"].index(result_0[0])] = \
-                ((int(stats["wins"][stats["team id"].index(result_0[0])]) +
-                 int(stats["draws"][stats["team id"].index(result_0[0])]) / 2) /
-                 int(stats["played"][stats["team id"].index(result_0[0])]))
-            stats["win%"][stats["team id"].index(result_1[0])] = \
-                ((int(stats["wins"][stats["team id"].index(result_1[0])]) +
-                 int(stats["draws"][stats["team id"].index(result_1[0])]) / 2) /
-                 int(stats["played"][stats["team id"].index(result_1[0])]))
-            stats["win%"][stats["team id"].index(result_1[0])] = \
-                str(round(float(stats["win%"][stats["team id"].index(result_1[0])]), 2) * 100) + "%"
-            stats["wins"][stats["team id"].index(result_0[0])] = int(stats["wins"][stats["team id"].index(result_0[0])])
-            stats["wins"][stats["team id"].index(result_1[0])] = int(stats["wins"][stats["team id"].index(result_1[0])])
-            stats["points difference"][stats["team id"].index(result_0[0])] = \
-                (int(stats["for"][stats["team id"].index(result_0[0])]) -
-                 int(stats["against"][stats["team id"].index(result_0[0])]))
-            stats["points difference"][stats["team id"].index(result_1[0])] = \
-                (int(stats["for"][stats["team id"].index(result_1[0])]) -
-                 int(stats["against"][stats["team id"].index(result_1[0])]))
-        stats["position"] = [x for x in range(1, 13)]
-        stats_1 = pandas.DataFrame(stats)
+            stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "played"] = \
+                int(stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "played"]) + 1
+            stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "played"] = \
+                int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "played"]) + 1
+
+            stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "for"] = \
+                int(stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "for"]) + result_0[1]
+            stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "for"] = \
+                int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "for"]) + result_1[1]
+
+            stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "against"] = \
+                int(stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "against"]) + result_1[1]
+            stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "against"] = \
+                int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "against"]) + result_0[1]
+
+            stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "wins"] = \
+                int(stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "wins"]) + \
+                (result_0[1] > result_1[1])
+            stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "wins"] = \
+                int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "wins"]) + \
+                (result_1[1] > result_0[1])
+
+            stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "draws"] = \
+                int(stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "draws"]) + \
+                (result_0[1] == result_1[1])
+            stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "draws"] = \
+                int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "draws"]) + \
+                (result_1[1] == result_0[1])
+
+            stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "losses"] = \
+                int(stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "losses"]) + \
+                (result_0[1] < result_1[1])
+            stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "losses"] = \
+                int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "losses"]) + \
+                (result_1[1] < result_0[1])
+
+            stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "win%"] = \
+                str(round(float(((int(stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1,
+                                                "wins"]) +
+                                  int(stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1,
+                                                "draws"]) / 2) /
+                                 int(stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1,
+                                               "played"]))), 2) * 100) + "%"
+            stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "win%"] = \
+                str(round(float(((int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1,
+                                                "wins"]) +
+                                  int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1,
+                                                "draws"]) / 2) /
+                                 int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1,
+                                               "played"]))), 2) * 100) + "%"
+
+            stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "points difference"] = \
+                (int(stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "for"]) -
+                 int(stats.loc[int(stats.loc[stats["team id"] == result_0[0]]["position"]) - 1, "against"]))
+            stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "points difference"] = \
+                (int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "for"]) -
+                 int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "against"]))
         # TODO: Sort the values
-        cols = set_column_sequence(stats_1, ["position", "team name", "team id", "played", "wins", "draws", "losses",
-                                             "win%", "for",
-                                             "against", "points difference"])
+        cols = set_column_sequence(stats, ["position", "team name", "team id", "played", "wins", "draws", "losses",
+                                           "win%", "for",
+                                           "against", "points difference"])
         with open(self._csv_file, "w") as file:
             file.write(cols.to_csv())
 
