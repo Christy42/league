@@ -161,12 +161,12 @@ class LeagueTable:
     def initialise_file(self):
         with open(self._csv_file, 'w') as csv_file:
             writer = csv.writer(csv_file, delimiter=',',
-                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
             writer.writerow(["position", "team id", "team name", "played", "wins", "draws", "losses",
                             "win%", "for", "against", "points difference"])
             position = 1
             for row in self._team_ids:
-                writer.writerow([position, row, self._team_ids[row], "0", '0', '0', '0', '0', '0', '0', '0'])
+                writer.writerow([position, row, self._team_ids[row], '0', '0', '0', '0', '0', '0', '0', '0'])
                 position += 1
 
     def display_file(self):
