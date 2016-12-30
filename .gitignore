@@ -1,1 +1,10 @@
 .idea*
+*.egg*
+*.csv
+*.pyc
+*teams/*
+*teams.*
+*schedule.yaml
+*players/*
+*fixtures.yaml
+*round*

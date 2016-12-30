@@ -5,9 +5,9 @@ We have leagues folder
         Then we have a directory for each tier of the game.  We will start with 3
             This directory will contain the files relating to cup matches
             The folders in here will be one for each league
-                Finally this will contain a csv containing the league ordering
-                A file containing the teams user ids
-                The schedule for the league
+                Finally this will contain a csv containing the league ordering called table
+                A file containing the teams user ids called team
+                The schedule for the league called schedule
 
 
 Later on files will be created containing the play off matches and the demotions/promotions
