@@ -15,30 +15,98 @@ pool should contain 3 teams attempting promotion and 1 avoiding demotion).
 import yaml
 import os
 import csv
+import pandas
 
 from random import randint
 
-from create_team import create_team
+from create_team import create_team, remove_player
 from league import LeagueTable
 
 
+def create_tier_from_lists(list_of_teams):
+    """
+    :param list_of_teams: a list of lists, each list should contain 12 team ids
+    :return:
+    """
+    with open("leagues//season_number.yaml", "r") as file:
+        season_number = yaml.safe_load(file)
+    base_name = "leagues//" + str(season_number)
+    if not os.path.exists(base_name):
+        os.makedirs(base_name)
+    tier = 1
+    league_no = 0
+    for league in list_of_teams:
+        league_no += 1
+        if league_no >= max(1, tier * 3):
+            league_no = 0
+            tier += 1
+        league_name = chr(tier - 1 + ord('a')) + " " + str(league_no)
+        if not os.path.exists(base_name + "//" + str(tier)):
+            os.makedirs(base_name + "//" + str(tier))
+        if not os.path.exists(base_name + "//" + str(tier) + "//" + league_name):
+            os.makedirs(base_name + "//" + str(tier) + "//" + league_name)
+
+        with open(base_name + "//" + str(tier) + "//" + league_name + "//" + "teams.yaml", "w") as file:
+            yaml.safe_dump({"leagues name": league_name, "teams": list(team.keys())}, file)
+        with open(base_name + "//cup_fixtures.yaml", "r") as file:
+            cup_teams = yaml.safe_load(file)
+        if cup_teams is None:
+            cup_teams = []
+        else:
+            cup_teams = cup_teams[1:]
+        cup_teams += list(team.keys())
+        with open(base_name + "//cup_fixtures.yaml", "w") as file:
+            yaml.safe_dump([1] + cup_teams, file)
+
+
 def create_tier(tier):
+    with open("leagues//season_number.yaml", "r") as file:
+        season_number = yaml.safe_load(file)
+    base_name = "leagues//" + str(season_number)
+    if not os.path.exists(base_name):
+        os.makedirs(base_name)
     for i in range(max(3 ** (tier - 1), 1)):
         league_name = chr(tier - 1 + ord('a')) + " " + str(i)
-        if not os.path.exists("leagues//" + str(tier)):
-            os.makedirs("leagues//" + str(tier))
+        if not os.path.exists(base_name + "//" + str(tier)):
+            os.makedirs(base_name + "//" + str(tier))
         team = {}
         country = ["Ireland", "United Kingdom", "United States of America", "Canada", "Australia"]
         for _ in range(12):
             t = create_team(country[randint(0, 4)], str(tier) + " " + str(i))
             team.update({t: t})
-        with open("leagues//" + str(tier) + "//" + league_name + ".yaml", "w") as file:
-            yaml.safe_dump({"league name": league_name, "teams": list(team.keys())}, file)
-        league = LeagueTable(team, "leagues//" + str(tier) + "//" + league_name + "-schedule.yaml",
-                             "leagues//" + str(tier) + "//" + league_name + ".csv", league_name)
+        print(i)
+        if not os.path.exists(base_name + "//" + str(tier) + "//" + league_name):
+            os.makedirs(base_name + "//" + str(tier) + "//" + league_name)
+        with open(base_name + "//" + str(tier) + "//" + league_name + "//" + "teams.yaml", "w") as file:
+            yaml.safe_dump({"leagues name": league_name, "teams": list(team.keys())}, file)
+        with open(base_name + "//cup_fixtures.yaml", "r") as file:
+            cup_teams = yaml.safe_load(file)
+        if cup_teams is None:
+            cup_teams = []
+        else:
+            cup_teams = cup_teams[1:]
+        cup_teams += list(team.keys())
+        with open(base_name + "//cup_fixtures.yaml", "w") as file:
+            yaml.safe_dump([1] + cup_teams, file)
+        league = LeagueTable(team, base_name + "//" + str(tier) + "//" + league_name + "//schedule.yaml",
+                             base_name + "//" + str(tier) + "//" + league_name + "//table.csv", league_name)
         league.create_schedule()
         league.initialise_file()
-        # TODO: create league table and fixture list file
+
+
+def play_week(week_number, league_folder):
+    for tier in os.listdir(league_folder):
+        if "cup" not in tier and "round" not in tier:
+            for league in os.listdir(league_folder + "//" + str(tier)):
+                with open(league_folder + "//" + str(tier) + "//" + league + "//teams.yaml", "r") as file:
+                    ids = yaml.safe_load(file)["teams"]
+                # TODO: Create League Class here
+                leagues = LeagueTable(team_ids=ids,
+                                      yaml_file=league_folder + "//" + str(tier) + "//" + league + "//schedule.yaml",
+                                      csv_file=league_folder + "//" + str(tier) + "//" + league + "//table.csv",
+                                      name=league)
+
+                leagues.play_week(week_number)
 
 
 def enact_promotions(league_file):
@@ -68,6 +136,7 @@ def enact_promotions(league_file):
     return {"promotion": promotion_list, "demotion": demotion_list, "prom_playoff": promotion_qualifiers,
             "dem_playoff": demotion_qualifiers}
 
+
 def run_playoffs(promotions, league_folder):
     play_offs = {}
     for tier in range(1, len(promotions["promotion"])):
@@ -91,6 +160,7 @@ def run_playoffs(promotions, league_folder):
             with open(league_folder + "//" + str(tier) + "//" + str(league) + "//playoff.yaml", "w") as file:
                 yaml.safe_dump(play_offs, file)
 
+
 # TODO: create a function to run the games and add all the needed teams to the correct lists
 def run_play_offs(league_folder):
     for tier in range(1, len([name for name in os.listdir(league_folder)]) + 1):
@@ -104,45 +174,176 @@ def run_play_offs(league_folder):
             with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//playoff.yaml", "w") as file:
                 yaml.safe_dump(play_offs, file)
 
+
 # TODO: create a function to take these from a file and enact/remove promotions
 def change_files_promotions(league_folder):
     for tier in range(1, len([name for name in os.listdir(league_folder)]) + 1):
         for league in range(max(1, (tier - 1) * 3)):
             with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//playoff.yaml", "r") as file:
                 play_offs = yaml.safe_load(file)
-            with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//league.yaml", "r") as file:
+            with open(league_folder + "//" + str(tier) + "//" + str(league)  + "//leagues.yaml", "r") as file:
                 teams = yaml.safe_load(file)
             teams += play_offs
-# delete yaml files.  Have season files?  maybe in league file name
+# delete yaml files.  Have season files?  maybe in leagues file name
 
-def create_cup_fixtures(tier):
-    no_of_teams = 0
-    count = tier - 1
-    while count > 0:
-        no_of_teams += 12 * 3 ** count
-        count -= 1
+
+def create_cup_fixtures(league_folder):
+    with open(league_folder + "//cup_fixtures.yaml") as file:
+        teams = yaml.safe_load(file)
+    round_of_cup = teams[0]
+    teams = teams[1:]
+    no_of_teams = len(teams)
     no_of_byes = shift_bit_length(no_of_teams) - no_of_teams
-    # TODO: Add all team ids of these to a list properly
-    list_of_teams = []
-    for i in range(no_of_teams):
-        list_of_teams.append(i)
-    list_of_teams += ["BYE"] * no_of_byes
+    byes = ["BYE"] * no_of_byes
     fixtures = []
-    print(len(list_of_teams))
-    print(no_of_byes)
-    assert len(list_of_teams) - shift_bit_length(len(list_of_teams)) == 0
-    while len(list_of_teams) > 0:
-        team_played = randint(1, len(list_of_teams) - 1)
-        fixtures.append((list_of_teams[0], list_of_teams[team_played]))
-        list_of_teams.remove(list_of_teams[team_played])
-        list_of_teams.remove(list_of_teams[0])
-    return fixtures
+    while len(byes) > 0:
+        team_playing = randint(0, len(teams) - 1)
+        fixtures.append(("BYE", teams[team_playing]))
+        teams.remove(teams[team_playing])
+        byes.remove("BYE")
+    while len(teams) > 0:
+        count = 0
+        team_playing = randint(0, len(teams) - 1)
+        team_playing_2 = team_playing
+        while teams[team_playing] == teams[team_playing_2]:
+            count += 1
+            team_playing_2 = randint(0, len(teams) - 1)
+            if count > 15:
+                return -1
+        match = [teams[team_playing], teams[team_playing_2]]
+        if count > 15:
+            return -1
+        fixtures.append((match[0], match[1]))
+        teams.remove(match[0])
+        teams.remove(match[1])
+    with open(league_folder + "//round_" + str(round_of_cup) + ".yaml", "w") as file:
+        yaml.safe_dump(fixtures, file)
+    return 0
 
 
 def shift_bit_length(x):
     return 1 << (x-1).bit_length()
 
 
-def play_cup_fixtures():
-    # TODO: Remember that we need to create the next fixtures as well
-    pass
+def play_cup_fixtures(league_folder):
+    with open(league_folder + "//cup_fixtures.yaml", "r") as file:
+        teams = yaml.safe_load(file)
+    with open(league_folder + "//round_" + str(teams[0]) + ".yaml", "r") as file:
+        fixtures = yaml.safe_load(file)
+
+    winners = [teams[0] + 1]
+    for fixture in fixtures:
+        # TODO: Actually play cup fixtures
+        if fixture[0] == "BYE":
+            winner = 1
+        elif fixture[1] == "BYE":
+            winner = 0
+        else:
+            winner = randint(0, 1)
+        winners.append(fixture[winner])
+    with open(league_folder + "//cup_fixtures.yaml", "w") as file:
+        yaml.safe_dump(winners, file)
+    create_cup_fixtures(league_folder)
+
+
+def end_of_season(league_folder):
+    # TODO: Do promotion stuff
+    # Retire players/announce retirements Done
+    # Age players Done
+    # Change contract details Done
+    # Create list of free agent players (with old teams) Done
+    # sort out who is in what league
+
+    # iterate season number
+    with open(league_folder + "//season_number.yaml", "r") as file:
+        number = yaml.safe_load(file) + 1
+    with open(league_folder + "//season_number.yaml", "w") as file:
+        yaml.safe_dump(number, file) + 1
+    # create tiers from preset lists of teams
+    # ensure teams are not going over the maximum salary cap
+    # ensure each team has minimum number of players by any means needed Done
+
+
+def age_players(player_folder, team_folder):
+    for file in os.listdir(player_folder):
+        if ".yaml" in file:
+            with open(player_folder + "//" + file, "r") as player_file:
+                player_stats = yaml.safe_load(player_file)
+            player_stats["age"] += 1
+            if player_stats["retiring"]:
+                os.remove(player_folder + "//players//" + file)
+                with open(player_folder + "//ref//player_id.yaml", "r") as player_names:
+                    names = yaml.safe_load(player_names)
+                player_no = file[:len(file) - 5]
+                player_no = player_no[7:]
+                names.remove(int(player_no))
+                with open(player_folder + "//ref//player_id.yaml", "w") as player_names:
+                    yaml.safe_dump(names, player_names)
+            else:
+                if randint(32, 37) < player_stats["age"]:
+                    player_stats["retiring"] = False
+                # Move player to free agency
+                if player_stats["years_left"] == 1:
+                    with open(team_folder + "//" + player_stats["team_id"] + ".yaml", "r") as file_team:
+                        team = yaml.safe_load(file_team)
+                    team["player"].remove(file[:len(file)-5])
+                    with open(team_folder + "//" + player_stats["team_id"] + ".yaml", "w") as file_team:
+                        yaml.safe_dump(team, file_team)
+                    with open(player_folder + "//free_agents.yaml", "r") as free_agent_file:
+                        free_agents = yaml.safe_load(free_agent_file)
+                    free_agents.update({file[:len(file)-5]: {"team_id": player_stats["team_id"],
+                                                             "team": player_stats["team"],
+                                                             "asking": 1000}})
+                    with open(player_folder + "//free_agents.yaml", "w") as free_agent_file:
+                        yaml.safe_dump(free_agents, free_agent_file)
+                    player_stats["team"] = "N/A"
+                    pass
+                else:
+                    player_stats["years_left"] = max(0, player_stats["years_left"] - 1)
+                with open(player_folder + "//" + file, "w") as player_file:
+                    yaml.safe_dump(player_stats, player_file)
+
+
+def check_salary_cap(team_folder, player_folder, salary_cap):
+    for team_file in os.listdir(team_folder):
+        with open(team_folder + "//teams//" + team_file) as file:
+            team = yaml.safe_load(file)
+        players = team["player"]
+        salaries = {}
+        for player in players:
+            with open(player_folder + "//players//" + player + ".yaml") as player_file:
+                salaries.update({player: yaml.safe_load(player_file)["contract_value"]})
+        salary = sum(list(salaries.values()))
+        while salary > salary_cap:
+
+            fired = randint(0, len(players))
+            remove_player(players[fired], player_folder, team_file[:len(team_file) - 5], team_folder, -1)
+            salaries.pop(players[fired])
+            salary = sum(list(salaries.values()))
+
+
+def sort_league(league_folder):
+    """
+    :param league_folder: is the folder in which the 2 csv files and yaml files reside
+    :return:
+    """
+    with open(league_folder + "//" + "table.csv") as table_file:
+        table = csv.reader(table_file, delimiter=',', quotechar="~")
+        data = []
+        for row in table:
+            data.append(row)
+    headers = data.pop(0)
+    df = pandas.DataFrame(data, columns=headers)
+    df["rand"] = [randint(0, 10000) for _ in range(12)]
+    df.sort_values(by=["win%", "points difference", "for", "rand"], ascending=False)
+    del df["rand"]
+    df["position"] = [x for x in range(1, 13)]
+
+    df.to_csv(league_folder + "//" + "table.csv")
+
+
+def sort_entire_league(league_folder):
+    for tier_folder in os.listdir(league_folder):
+        if "fixtures" not in tier_folder and "round" not in tier_folder:
+            for folder in os.listdir(league_folder + "//" + tier_folder):
+                sort_league(league_folder + "//" + tier_folder + "//" + folder)
