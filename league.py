@@ -166,7 +166,7 @@ class LeagueTable:
                             "win%", "for", "against", "points difference"])
             position = 1
             for row in self._team_ids:
-                writer.writerow([position, row, self._team_ids[row], "0", '0', '0', '0', '0', '0', '0', '0'])
+                writer.writerow([position, row, self._team_ids[row], '0', '0', '0', '0', '0', '0', '0', '0'])
                 position += 1
 
     def display_file(self):
