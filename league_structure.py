@@ -54,9 +54,13 @@ def create_tier_from_lists(list_of_teams):
             cup_teams = []
         else:
             cup_teams = cup_teams[1:]
-        cup_teams += list(team.keys())
+        cup_teams += league
         with open(base_name + "//cup_fixtures.yaml", "w") as file:
             yaml.safe_dump([1] + cup_teams, file)
+        league_stat = LeagueTable(league, base_name + "//" + str(tier) + "//" + league_name + "//schedule.yaml",
+                                  base_name + "//" + str(tier) + "//" + league_name + "//table.csv", league_name)
+        league_stat.create_schedule()
+        league_stat.initialise_file()
 
 
 def create_tier(tier):
