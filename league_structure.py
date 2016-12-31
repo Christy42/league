@@ -356,5 +356,4 @@ def sort_entire_league(league_folder):
     for tier_folder in os.listdir(league_folder):
         if "fixtures" not in tier_folder and "round" not in tier_folder:
             for folder in os.listdir(league_folder + "//" + tier_folder):
-                print(league_folder + "//" + tier_folder + "//" + folder)
                 sort_league(league_folder + "//" + tier_folder + "//" + folder)
