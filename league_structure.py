@@ -263,8 +263,8 @@ def end_of_season(league_folder):
         number = yaml.safe_load(file) + 1
     with open(league_folder + "//season_number.yaml", "w") as file:
         yaml.safe_dump(number, file) + 1
-    # create tiers from preset lists of teams
-    # ensure teams are not going over the maximum salary cap
+    # create tiers from preset lists of teams Done
+    # ensure teams are not going over the maximum salary cap Done
     # ensure each team has minimum number of players by any means needed Done
 
 
@@ -339,10 +339,16 @@ def sort_league(league_folder):
     headers = data.pop(0)
     df = pandas.DataFrame(data, columns=headers)
     df["rand"] = [randint(0, 10000) for _ in range(12)]
-    df.sort_values(by=["win%", "points difference", "for", "rand"], ascending=False)
+    df["win per"] = [int(df["wins"][i]) + int(df["draws"][i]) / 2 for i in range(12)]
+    df["points difference"] = [int(df["points difference"][i]) for i in range(12)]
+    df["for"] = [int(df["for"][i]) for i in range(12)]
+    df = df.sort_values(by=["win per", "points difference", "for", "rand"], ascending=False)
     del df["rand"]
-    df["position"] = [x for x in range(1, 13)]
-
+    del df["position"]
+    del df["win per"]
+    position = [x for x in range(1, 13)]
+    df.insert(1, "position", position)
+    del df[""]
     df.to_csv(league_folder + "//" + "table.csv")
 
 
@@ -350,4 +356,5 @@ def sort_entire_league(league_folder):
     for tier_folder in os.listdir(league_folder):
         if "fixtures" not in tier_folder and "round" not in tier_folder:
             for folder in os.listdir(league_folder + "//" + tier_folder):
+                print(league_folder + "//" + tier_folder + "//" + folder)
                 sort_league(league_folder + "//" + tier_folder + "//" + folder)
