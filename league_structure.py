@@ -133,7 +133,7 @@ def work_out_promotions(league_folder):
             play_offs_up[str(tier)] = []
             promotions[str(tier)] = []
             demotions[str(int(tier) + 1)] = []
-            play_offs_down[str(tier)] = []
+            play_offs_down[str(tier)] = {}
             tier_max = tier
             for league in os.listdir(league_folder + "//" + str(tier)):
                 leagues[str(tier)][str(league)] = []
@@ -287,7 +287,6 @@ def end_of_season(league_folder, team_folder, player_folder, salary_cap, minimum
     check_salary_cap(team_folder, player_folder, salary_cap)
     # Create list of free agent players (with old teams) Done
     # sort out who is in what league
-
     # iterate season number
     with open(league_folder + "//season_number.yaml", "r") as file:
         number = yaml.safe_load(file) + 1
@@ -342,7 +341,7 @@ def age_players(player_folder, team_folder):
 
 
 def check_salary_cap(team_folder, player_folder, salary_cap):
-    for team_file in os.listdir(team_folder):
+    for team_file in os.listdir(team_folder + "//teams"):
         with open(team_folder + "//teams//" + team_file) as file:
             team = yaml.safe_load(file)
         players = team["player"]
