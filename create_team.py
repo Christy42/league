@@ -168,7 +168,7 @@ def ensure_team_has_minimum(team_folder, minimum):
         with open(team_folder + "//teams//" + file, "r") as team_file:
             team = yaml.safe_load(team_file)
         while team["player"] < minimum:
-            add_player(file[:len(file) - 5], team_folder)
+            add_player(file[:len(file) - 5], team_folder, 999)
         with open(team_folder + "//teams//" + file, "w") as team_file:
             yaml.safe_dump(team, team_file)
 

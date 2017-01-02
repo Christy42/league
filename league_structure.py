@@ -19,7 +19,7 @@ import pandas
 
 from random import randint
 
-from create_team import create_team, remove_player
+from create_team import create_team, remove_player, ensure_team_has_minimum
 from league import LeagueTable
 
 
@@ -160,7 +160,7 @@ def work_out_promotions(league_folder):
                         "tier_max": tier_max, "leagues": leagues, "team_league": team_league}, file)
 
 
-def run_playoffs(league_folder):
+def run_playoffs(league_folder, team_folder):
     play_offs = {}
     with open(league_folder + "//promotions.yaml", "r") as promotion_file:
         promotions = yaml.safe_load(promotion_file)
@@ -199,7 +199,7 @@ def run_playoffs(league_folder):
     for league in os.listdir(league_folder + "//" + str(promotions["tier_max"])):
         for team in promotions["play_offs_down"][str(promotions["tier_max"])][league]:
             promotions["leagues"][str(promotions["tier_max"])][league].append(team)
-    create_tier_from_lists(promotions["leagues"])
+    create_tier_from_lists(promotions["leagues"], team_folder)
 
 
 # TODO: create a function to run the games and add all the needed teams to the correct lists
@@ -279,7 +279,7 @@ def play_cup_fixtures(league_folder):
     create_cup_fixtures(league_folder)
 
 
-def end_of_season(league_folder, team_folder, player_folder, salary_cap):
+def end_of_season(league_folder, team_folder, player_folder, salary_cap, minimum):
     # TODO: Do promotion stuff
     # Retire players/announce retirements Done
     age_players(player_folder, team_folder)
@@ -292,8 +292,11 @@ def end_of_season(league_folder, team_folder, player_folder, salary_cap):
     with open(league_folder + "//season_number.yaml", "r") as file:
         number = yaml.safe_load(file) + 1
     with open(league_folder + "//season_number.yaml", "w") as file:
-        yaml.safe_dump(number, file) + 1
+        yaml.safe_dump(number, file)
+    work_out_promotions(league_folder + "//" + str(number - 1))
+    run_playoffs(league_folder + "//" + str(number - 1), team_folder)
     # create tiers from preset lists of teams Done
+    ensure_team_has_minimum(team_folder, minimum)
     # ensure teams are not going over the maximum salary cap Done
     # ensure each team has minimum number of players by any means needed Done
 
