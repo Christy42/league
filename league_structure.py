@@ -106,7 +106,7 @@ def create_tier(tier):
 
 def play_week(week_number, league_folder):
     for tier in os.listdir(league_folder):
-        if "cup" not in tier and "round" not in tier:
+        if "cup" not in tier and "round" not in tier and "promotions" not in tier:
             for league in os.listdir(league_folder + "//" + str(tier)):
                 with open(league_folder + "//" + str(tier) + "//" + league + "//teams.yaml", "r") as file:
                     ids = yaml.safe_load(file)["teams"]
@@ -128,7 +128,7 @@ def work_out_promotions(league_folder):
     tier_max = 0
     team_league = {}
     for tier in os.listdir(league_folder):
-        if "round" not in tier and "cup" not in tier:
+        if "round" not in tier and "cup" not in tier and "promotions" not in tier:
             leagues[str(tier)] = {}
             play_offs_up[str(tier)] = []
             promotions[str(tier)] = []
@@ -145,7 +145,7 @@ def work_out_promotions(league_folder):
                         teams.append(row[3])
                     teams.pop(0)
                     leagues[str(tier)][str(league)] = teams[2:8]
-                    if tier > 1:
+                    if int(tier) > 1:
                         promotions[str(int(tier) - 1)].append(teams[0])
                         play_offs_up[str(int(tier) - 1)].append(teams[1])
                         team_league[teams[1]] = [tier, league]
@@ -165,8 +165,8 @@ def run_playoffs(league_folder, team_folder):
     with open(league_folder + "//promotions.yaml", "r") as promotion_file:
         promotions = yaml.safe_load(promotion_file)
 
-    for tier in range(0, promotions["tier_max"]):
-        play_offs[tier] = []
+    for tier in range(0, int(promotions["tier_max"])):
+        play_offs[tier] = {}
         for league in range(max(1, tier * 3)):
             play_offs[tier][league] = []
             play_offs[tier][league].append(promotions["play_offs_down"][str(tier)][str(league)])
@@ -283,8 +283,10 @@ def end_of_season(league_folder, team_folder, player_folder, salary_cap, minimum
     # TODO: Do promotion stuff
     # Retire players/announce retirements Done
     age_players(player_folder, team_folder)
+    print("aged players")
     # Change contract details Done
     check_salary_cap(team_folder, player_folder, salary_cap)
+    print("salary cap checked")
     # Create list of free agent players (with old teams) Done
     # sort out who is in what league
     # iterate season number
@@ -292,8 +294,11 @@ def end_of_season(league_folder, team_folder, player_folder, salary_cap, minimum
         number = yaml.safe_load(file) + 1
     with open(league_folder + "//season_number.yaml", "w") as file:
         yaml.safe_dump(number, file)
+    print("season number changed")
     work_out_promotions(league_folder + "//" + str(number - 1))
+    print("promotions worked out")
     run_playoffs(league_folder + "//" + str(number - 1), team_folder)
+    print("play offs run")
     # create tiers from preset lists of teams Done
     ensure_team_has_minimum(team_folder, minimum)
     # ensure teams are not going over the maximum salary cap Done
@@ -386,6 +391,6 @@ def sort_league(league_folder):
 
 def sort_entire_league(league_folder):
     for tier_folder in os.listdir(league_folder):
-        if "fixtures" not in tier_folder and "round" not in tier_folder:
+        if "fixtures" not in tier_folder and "round" not in tier_folder and "promotions" not in tier_folder:
             for folder in os.listdir(league_folder + "//" + tier_folder):
                 sort_league(league_folder + "//" + tier_folder + "//" + folder)
