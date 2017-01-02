@@ -157,7 +157,8 @@ def work_out_promotions(league_folder):
                     team_league[teams[11]] = [tier, league]
     with open(league_folder + "//promotions.yaml", "w") as file:
         yaml.safe_dump({"play_offs_up": play_offs_up, "promotions": promotions, "demotions": demotions,
-                        "tier_max": tier_max, "leagues": leagues, "team_league": team_league}, file)
+                        "tier_max": tier_max, "leagues": leagues, "team_league": team_league,
+                        "play_offs_down": play_offs_down}, file)
 
 
 def run_playoffs(league_folder, team_folder):
@@ -165,11 +166,11 @@ def run_playoffs(league_folder, team_folder):
     with open(league_folder + "//promotions.yaml", "r") as promotion_file:
         promotions = yaml.safe_load(promotion_file)
 
-    for tier in range(0, int(promotions["tier_max"])):
-        play_offs[tier] = {}
+    for tier in range(1, int(promotions["tier_max"])):
+        play_offs[str(tier)] = {}
         for league in range(max(1, tier * 3)):
-            play_offs[tier][league] = []
-            play_offs[tier][league].append(promotions["play_offs_down"][str(tier)][str(league)])
+            play_offs[str(tier)][str(league)] = []
+            play_offs[str(tier)][str(league)].append(promotions["play_offs_down"][str(tier)][str(league)])
             while len(play_offs[tier][league]) < 4:
                 next_team = randint(0, len(promotions["play_offs_up"][str(tier)]) - 1)
                 play_offs[tier][league].append(promotions["play_offs_up"][str(tier)][next_team])
@@ -194,7 +195,10 @@ def run_playoffs(league_folder, team_folder):
                     promotions["demotions"][str(tier)].remove(promotions["demotions"][str(tier)][demoted])
 
     for team in promotions["demotions"][str(int(promotions["tier_max"]) + 1)]:
+        print(team)
         default_tier = str(promotions["team_league"][team][0])
+        print(default_tier)
+
         promotions["leagues"][default_tier][str(promotions["team_league"][team][0])].append(team)
     for league in os.listdir(league_folder + "//" + str(promotions["tier_max"])):
         for team in promotions["play_offs_down"][str(promotions["tier_max"])][league]:
