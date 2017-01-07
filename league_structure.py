@@ -29,6 +29,7 @@ def create_tier_from_lists(dict_of_teams, team_folder):
     :param team_folder: overall folder for teams
     :return:
     """
+    print(dict_of_teams)
     with open("leagues//season_number.yaml", "r") as file:
         season_number = yaml.safe_load(file)
     base_name = "leagues//" + str(season_number)
@@ -38,35 +39,41 @@ def create_tier_from_lists(dict_of_teams, team_folder):
     for tier in dict_of_teams:
         if not os.path.exists(base_name + "//" + str(tier)):
             os.makedirs(base_name + "//" + str(tier))
-            for league_name in dict_of_teams[tier]:
-                league = {}
-                for team in dict_of_teams[tier][league]:
-                    with open(team_folder + "//teams//" + team + ".yaml", "r") as team_file:
-                        team_stat = yaml.safe_load(team_file)
-                    team_name = team_stat["team name"]
-                    team_stat["league name"] = league
-                    with open(team_folder + "//teams//" + team + ".yaml", "w") as team_file:
-                        yaml.safe_dump(team_stat, team_file)
-                    league.update({team: team_name})
-                if not os.path.exists(base_name + "//" + str(tier) + "//" + league_name):
-                    os.makedirs(base_name + "//" + str(tier) + "//" + league_name)
+        for league_name in dict_of_teams[tier]:
+            league = {}
+            print(dict_of_teams)
+            print(dict_of_teams[tier])
+            print(dict_of_teams[tier][league_name])
+            for team in dict_of_teams[tier][league_name]:
+                with open(team_folder + "//teams//" + team + ".yaml", "r") as team_file:
+                    team_stat = yaml.safe_load(team_file)
+                team_name = team_stat["team name"]
+                team_stat["league name"] = league_name
+                with open(team_folder + "//teams//" + team + ".yaml", "w") as team_file:
+                    yaml.safe_dump(team_stat, team_file)
+                league.update({team: team_name})
+            if not os.path.exists(base_name + "//" + str(tier) + "//" + league_name):
+                os.makedirs(base_name + "//" + str(tier) + "//" + league_name)
 
-                with open(base_name + "//" + str(tier) + "//" + league_name + "//" + "teams.yaml", "w") as file:
-                    yaml.safe_dump({"leagues name": league_name, "teams": list(league.keys())}, file)
-                with open(base_name + "//cup_fixtures.yaml", "r") as file:
-                    cup_teams = yaml.safe_load(file)
-                if cup_teams is None:
-                    cup_teams = []
-                else:
-                    cup_teams = cup_teams[1:]
-                cup_teams += league
-                with open(base_name + "//cup_fixtures.yaml", "w") as file:
-                    yaml.safe_dump([1] + cup_teams, file)
-                league_stat = LeagueTable(league, base_name + "//" + str(tier) + "//" + league_name + "//schedule.yaml",
-                                          base_name + "//" + str(tier) + "//" + league_name + "//table.csv",
-                                          league_name)
-                league_stat.create_schedule()
-                league_stat.initialise_file()
+            with open(base_name + "//" + str(tier) + "//" + league_name + "//" + "teams.yaml", "w") as file:
+                yaml.safe_dump({"leagues name": league_name, "teams": list(league.keys())}, file)
+            if not os.path.isfile(base_name + "//cup_fixtures.yaml"):
+                with open(base_name + "//cup_fixtures.yaml", "w"):
+                    pass
+            with open(base_name + "//cup_fixtures.yaml", "r") as file:
+                cup_teams = yaml.safe_load(file)
+            if cup_teams is None:
+                cup_teams = []
+            else:
+                cup_teams = cup_teams[1:]
+            cup_teams += league
+            with open(base_name + "//cup_fixtures.yaml", "w") as file:
+                yaml.safe_dump([1] + cup_teams, file)
+            league_stat = LeagueTable(league, base_name + "//" + str(tier) + "//" + league_name + "//schedule.yaml",
+                                      base_name + "//" + str(tier) + "//" + league_name + "//table.csv",
+                                      league_name)
+            league_stat.create_schedule()
+            league_stat.initialise_file()
 
 
 def create_tier(tier):
@@ -149,7 +156,9 @@ def work_out_promotions(league_folder):
                         promotions[str(int(tier) - 1)].append(teams[0])
                         play_offs_up[str(int(tier) - 1)].append(teams[1])
                         team_league[teams[1]] = [tier, league]
-                    play_offs_down[str(tier)][str(league)] = teams[8]
+                    else:
+                        leagues[str(tier)][str(league)] += teams[0:1]
+                    play_offs_down[str(tier)][str(league)].append(teams[8])
 
                     demotions[str(int(tier) + 1)] = teams[9:12]
                     team_league[teams[9]] = [tier, league]
@@ -195,13 +204,11 @@ def run_playoffs(league_folder, team_folder):
                     promotions["demotions"][str(tier)].remove(promotions["demotions"][str(tier)][demoted])
 
     for team in promotions["demotions"][str(int(promotions["tier_max"]) + 1)]:
-        print(team)
         default_tier = str(promotions["team_league"][team][0])
-        print(default_tier)
-
-        promotions["leagues"][default_tier][str(promotions["team_league"][team][0])].append(team)
+        promotions["leagues"][str(default_tier)][str(promotions["team_league"][team][1])].append(team)
     for league in os.listdir(league_folder + "//" + str(promotions["tier_max"])):
         for team in promotions["play_offs_down"][str(promotions["tier_max"])][league]:
+            print("T {}" .format(team))
             promotions["leagues"][str(promotions["tier_max"])][league].append(team)
     create_tier_from_lists(promotions["leagues"], team_folder)
 
@@ -345,7 +352,7 @@ def age_players(player_folder, team_folder):
                     pass
                 else:
                     player_stats["years_left"] = max(0, player_stats["years_left"] - 1)
-                with open(player_folder + "//" + file, "w") as player_file:
+                with open(player_folder + "//players//" + file, "w") as player_file:
                     yaml.safe_dump(player_stats, player_file)
 
 
