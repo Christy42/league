@@ -332,6 +332,10 @@ def age_players(player_folder, team_folder):
             with open(player_folder + "//players//" + file, "r") as player_file:
                 player_stats = yaml.safe_load(player_file)
             player_stats["age"] += 1
+            if player_stats["age"] <= 20:
+                increase = randint(1, 5)
+                player_stats["weight"] += (increase + randint(-6, 4)) * 1.9
+                player_stats["height"] += increase
             if player_stats["retiring"]:
                 os.remove(player_folder + "//players//" + file)
                 os.remove(player_folder + "//training//" + file)
