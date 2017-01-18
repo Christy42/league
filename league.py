@@ -1,9 +1,10 @@
 import csv
 import yaml
 import pandas
-import operator
 
 from random import randint
+
+from american_football import game
 
 
 # reorder columns
@@ -65,14 +66,25 @@ class LeagueTable:
         with open(self._yaml_file, "w") as file:
             yaml.safe_dump(fixtures, file)
 
-    def play_week(self, week_number):
+    def play_week(self, week_number, team_folder, player_folder):
         with open(self._yaml_file, "r") as file:
             games = yaml.safe_load(file)[week_number]
         scores = []
         for g in games:
-            # Looking for [team_id, for]
-            result_0 = [games[g][0], randint(0, 30)]
-            result_1 = [games[g][1], randint(0, 30)]
+            # Looking for player files, order files, formation files, team names
+            name = [0, 0]
+            formation = [0, 0]
+            orders = ["", ""]
+            for i in range(2):
+                with open(team_folder + "//teams//" + games[g][i] + ".yaml") as team_file:
+                    name[i] = yaml.safe_load(team_file)["team name"]
+                formation[i] = team_folder + "//orders//" + games[g][i] + "-formation.yaml"
+                orders[i] = team_folder + "//orders//" + games[g][i] + "-orders.yaml"
+            match = game.Game([player_folder + "//players", player_folder + "//players"], orders, formation, name)
+            match.play_game()
+            result = match.score
+            result_0 = [games[g][0], result[0]]
+            result_1 = [games[g][1], result[1]]
             scores.append((result_0, result_1))
         # Need to actually play the above games
         self.update_scores(scores)
