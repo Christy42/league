@@ -92,7 +92,8 @@ def create_player(nationality, team, team_id):
     player["guarantee"] = 0
     player["age"] = 16 + randint(0, 3)
     player["height"] = generate_height(player["age"])
-    player["height"] = generate_weight(player["height"])
+    player["weight"] = generate_weight(player["height"])
+    player["base_weight"] = player["weight"]
     player["years_left"] = 0
     player["retiring"] = False
     player["id"] = new_name
