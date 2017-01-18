@@ -90,11 +90,11 @@ def create_player(nationality, team, team_id):
     player["team_id"] = team_id
     player["contract_value"] = 1000
     player["guarantee"] = 0
-    player["weight"] = randint(70, 160)
-    player["height"] = randint(165, 213)
+    player["age"] = 16 + randint(0, 3)
+    player["height"] = generate_height(player["age"])
+    player["height"] = generate_weight(player["height"])
     player["years_left"] = 0
     player["retiring"] = False
-    player["age"] = 16 + randint(0, 3)
     player["id"] = new_name
     for attribute in low_att:
         player[attribute] = 100 + randint(0, 300)
@@ -204,3 +204,18 @@ def remove_player(player_id, player_folder, team_id, team_folder, minimum):
     else:
         # TODO: put in something to point out to the user that the player may not be removed
         pass
+
+
+def generate_height(age):
+    height = 135 + max(min(age - 16, 4), 0)
+    for _ in range(17 + max(min(age - 16, 4), 0)):
+        height += randint(0, 4)
+    return height
+
+
+def generate_weight(height):
+    weight = 1.11 * height - 15
+    random_max = int(min(height / 10 - 8, 10))
+    for _ in range(19):
+        weight -= randint(0, random_max)
+    return weight
