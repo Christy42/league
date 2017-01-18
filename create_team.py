@@ -90,9 +90,12 @@ def create_player(nationality, team, team_id):
     player["team_id"] = team_id
     player["contract_value"] = 1000
     player["guarantee"] = 0
+    player["weight"] = randint(70, 160)
+    player["height"] = randint(165, 213)
     player["years_left"] = 0
     player["retiring"] = False
     player["age"] = 16 + randint(0, 3)
+    player["id"] = new_name
     for attribute in low_att:
         player[attribute] = 100 + randint(0, 300)
     for attribute in pos_att:
