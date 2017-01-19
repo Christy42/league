@@ -255,6 +255,7 @@ def make_team(name, nationality, team_folder, league_folder, player_folder, tier
     team_stuff["nationality"] = nationality
     team_stuff["team name"] = name
     team_stuff["salary"] = 22000
+    team_stuff["draft picks"] = list(range(1, 12))
     with open(league_folder + "//" + str(tier) + "//" + team_stuff["leagues name"] + "//table.csv") as csv_file:
         pass
     # TODO: Put in team name into league tables.
@@ -264,3 +265,19 @@ def make_team(name, nationality, team_folder, league_folder, player_folder, tier
         team_stuff["player"].append(create_player(nationality, name, place))
     with open(team_folder + "//teams//" + place + ".yaml", "w") as team_file:
         yaml.safe_dump(team_stuff, team_file)
+
+
+def update_draft_picks(team_folder, week):
+    for team in os.listdir(team_folder + "//teams"):
+        with open(team_folder + "//teams//" + team + ".yaml", "r") as team_file:
+            team_stuff = yaml.safe_load(team_file)
+        team_stuff["draft picks"] = draft_pick_single_team(team_stuff["draft picks"], week)
+        with open(team_folder + "//teams//" + team + ".yaml", "r") as team_file:
+            yaml.safe_dump(team_stuff, team_file)
+
+
+def draft_pick_single_team(draft_picks, week):
+    while week in draft_picks:
+        draft_picks.remove(week)
+    draft_picks.append(week)
+    return week
