@@ -80,9 +80,10 @@ class LeagueTable:
                     name[i] = yaml.safe_load(team_file)["team name"]
                 formation[i] = team_folder + "//orders//" + games[g][i] + "-formation.yaml"
                 orders[i] = team_folder + "//orders//" + games[g][i] + "-orders.yaml"
-            match = game.Game([player_folder + "//players", player_folder + "//players"], orders, formation, name)
-            match.play_game()
-            result = match.score
+            # match = game.Game([player_folder + "//players", player_folder + "//players"], orders, formation, name)
+            # match.play_game()
+            # result = match.score
+            result = [randint(0, 30), randint(0, 30)]
             result_0 = [games[g][0], result[0]]
             result_1 = [games[g][1], result[1]]
             scores.append((result_0, result_1))

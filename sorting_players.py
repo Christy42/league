@@ -10,5 +10,5 @@ def train_players():
             training_mod = yaml.safe_load(train_file)
         focus = training_mod["focus"]
         route_assignment = training_mod["route assignment"]
-        training.training(os.environ['FOOTBALL_HOME'] + "//players//" + file, focus, route_assignment, "")
-        aging.aging(os.environ['FOOTBALL_HOME'] + "//players//" + file)
+        training.training(os.environ['FOOTBALL_HOME'] + "//players//players//" + file, focus, route_assignment, "")
+        aging.aging(os.environ['FOOTBALL_HOME'] + "//players//players//" + file)
