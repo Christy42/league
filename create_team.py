@@ -22,7 +22,8 @@ def create_team(nationality, league_name):
         yaml.safe_dump(names, file)
     to_write["player"] = []
     for i in range(22):
-        to_write["player"].append(create_player(nationality, team_name, team_name))
+        to_write["player"].append(nationality, team_name, team_name, attrib=[], week=8,
+                                  ideal_height=-1, ideal_weight=-1)
     with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + team_name + ".yaml", "w") as file:
         yaml.safe_dump(to_write, file)
     with open(os.environ['FOOTBALL_HOME'] + "//teams//dead_money//" + team_name + ".yaml", "w") as dead_money_file:
@@ -71,6 +72,25 @@ def create_team(nationality, league_name):
     return team_name
 
 
+def create_low_attrib(week):
+    maximum = int((12 - week) / 2) * 20 + 300
+    return randint(0, maximum)
+
+
+def create_high_attrib(week, special):
+    total = 5
+    maxes = int((11 - week) / 2)
+    tot = 0
+    number = 600
+    if special:
+        tot += max(randint(0, number), max(0, randint(- 1.6 * number, number)), max(0, randint(-0.5 * number, number)))
+    for _ in range(special, maxes):
+        tot += max(randint(0, number), max(0, randint(- 1.6 * number, number)))
+    for _ in range(maxes, total):
+        tot += randint(0, number)
+    return 500 + tot / total - 100 * (tot > 200 * total)
+
+
 def create_player(nationality, team, team_id, week, attrib, ideal_weight, ideal_height):
     with open(os.environ['FOOTBALL_HOME'] + "//players//ref//player_id.yaml", "r") as file:
         names = yaml.safe_load(file)
@@ -112,13 +132,17 @@ def create_player(nationality, team, team_id, week, attrib, ideal_weight, ideal_
     player["years_left"] = 0
     player["retiring"] = False
     player["id"] = new_name
+    while len(attrib) < 3:
+        add = high_att[randint(0, len(high_att) - 1)]
+        while add in attrib:
+            add = high_att[randint(0, len(high_att) - 1)]
+        attrib.append(add)
     for attribute in low_att:
-        player[attribute] = 100 + randint(0, 300)
+        player[attribute] = 100 + create_low_attrib(week)
     for attribute in pos_att:
         player[attribute] = 150 + randint(0, 100)
     for attribute in high_att:
-        player[attribute] = 500 + (randint(0, 500) + randint(0, 500) +
-                                   randint(0, 500) + randint(0, 500) + randint(0, 500)) / 5
+        player[attribute] = create_high_attrib(week, attribute in attrib)
     with open(os.environ['FOOTBALL_HOME'] + "//players//players//" + player_id + ".yaml", "w") as file:
         yaml.safe_dump(player, file)
     training = {"file name": os.environ['FOOTBALL_HOME'] + "//players//players//" + player_id + ".yaml", "focus": "",
@@ -158,13 +182,14 @@ def name_player(nationality):
     return first_name + " " + second_name
 
 
-def add_player(team_id, maximum):
+def add_player(team_id, maximum, week, attrib, ideal_height, ideal_weight):
     team_folder = os.environ['FOOTBALL_HOME'] + "//teams"
     with open(team_folder + "//" + team_id + ".yaml", "r") as team_file:
         team = yaml.safe_load(team_file)
     if team["player"] < maximum:
         team_name = team["team name"]
-        team["player"].append(create_player(team["nationality"], team_name, team_id))
+        team["player"].append(create_player(team["nationality"], team_name, team_id, attrib=attrib, week=week,
+                                            ideal_height=ideal_height, ideal_weight=ideal_weight))
         team["salary"] += 1000
         with open(team_folder + "//" + team_id + ".yaml", "w") as team_file:
             yaml.safe_dump(team, team_file)
@@ -284,7 +309,8 @@ def make_team(name, nationality, tier_adjust=0):
     for player in team_stuff["player"]:
         remove_player(player, place, 18)
     for i in range(22):
-        team_stuff["player"].append(create_player(nationality, name, place))
+        team_stuff["player"].append(create_player(team_stuff["nationality"], name, place, attrib=[], week=8,
+                                                  ideal_height=-1, ideal_weight=-1))
     with open(team_folder + "//teams//" + place + ".yaml", "w") as team_file:
         yaml.safe_dump(team_stuff, team_file)
 
