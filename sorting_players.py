@@ -22,3 +22,24 @@ def new_players(week):
             scouts = yaml.safe_load(scout_file)
         add_player(team.replace(".yaml", ""), attrib=scouts["attrib"], ideal_height=scouts["ideal_height"],
                    ideal_weight=scouts["ideal_weight"], week=week, maximum=70)
+
+
+def check_position(player_stats):
+    return ""
+
+
+def check_players_wages():
+    for player in os.listdir(os.environ['FOOTBALL_HOME'] + "players//players"):
+        with open(os.environ['FOOTBALL_HOME'] + "players//players//" + player) as player_file:
+            player_stats = yaml.safe_load(player_file)
+        if player_stats["contract_value"] == 1000:
+            pos = check_position(player_stats)
+            if pos != "":
+                # TODO: Change players position
+                # TODO: Create bid file for player
+                pass
+
+
+def check_bid_files():
+    # TODO: checks the various bid files and accepts them or not
+    pass
