@@ -1,6 +1,7 @@
 import csv
 import yaml
 import pandas
+import os
 
 from random import randint
 
@@ -66,7 +67,7 @@ class LeagueTable:
         with open(self._yaml_file, "w") as file:
             yaml.safe_dump(fixtures, file)
 
-    def play_week(self, week_number, team_folder, player_folder):
+    def play_week(self, week_number, team_folder, player_folder, season_no, league):
         with open(self._yaml_file, "r") as file:
             games = yaml.safe_load(file)[week_number]
         scores = []
@@ -80,9 +81,13 @@ class LeagueTable:
                     name[i] = yaml.safe_load(team_file)["team name"]
                 formation[i] = team_folder + "//orders//" + games[g][i] + "-formation.yaml"
                 orders[i] = team_folder + "//orders//" + games[g][i] + "-orders.yaml"
-            match = game.Game([player_folder + "//players", player_folder + "//players"], orders, formation, name)
+            comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
+                str(season_no) + str(league) + str(name[0]) + str(name[1]) + ".txt"
+            match = game.Game([player_folder + "//players", player_folder + "//players"], orders, formation, name,
+                              comm_file)
             match.play_game()
             result = match.score
+            # result = [randint(0, 30), randint(0, 30)]
             result_0 = [games[g][0], result[0]]
             result_1 = [games[g][1], result[1]]
             scores.append((result_0, result_1))
