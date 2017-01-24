@@ -17,7 +17,8 @@ def train_players():
 
 def new_players(week):
     for team in os.listdir(os.environ['FOOTBALL_HOME'] + "//teams//teams"):
-        with open(os.environ['FOOTBALL_HOME'] + "//teams//scouting//scouts-" + team.replace(".yaml", "")) as scout_file:
+        with open(os.environ['FOOTBALL_HOME'] + "//teams//scouting//scouts-" + team.replace(".yaml", ""), "r") \
+                as scout_file:
             scouts = yaml.safe_load(scout_file)
         add_player(team.replace(".yaml", ""), attrib=scouts["attrib"], ideal_height=scouts["ideal_height"],
                    ideal_weight=scouts["ideal_weight"], week=week, maximum=70)

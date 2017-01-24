@@ -18,6 +18,9 @@ def create_team(nationality, league_name):
     to_write["draft picks"] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     to_write["salary"] = 22000
     to_write["trophies"] = {"cup": [0]}
+    scout_base = {"ideal_height": -1, "ideal_weight": -1, "attrib": []}
+    with open(os.environ['FOOTBALL_HOME'] + "//teams//scouting//scouts-" + team_name + ".yaml", "w") as scout_file:
+        yaml.safe_dump(scout_base, scout_file)
     with open(os.environ['FOOTBALL_HOME'] + "//teams//ref//team_names.yaml", "w") as file:
         yaml.safe_dump(names, file)
     to_write["player"] = []
