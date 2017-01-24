@@ -18,6 +18,7 @@ import csv
 import pandas
 
 from random import randint
+from american_football import game
 
 from create_team import create_team, remove_player, ensure_team_has_minimum
 from league import LeagueTable
@@ -121,7 +122,7 @@ def play_week(week_number, season_number):
                                       csv_file=league_folder + "//" + str(tier) + "//" + league + "//table.csv",
                                       name=league)
 
-                leagues.play_week(week_number, team_folder, player_folder)
+                leagues.play_week(week_number, team_folder, player_folder, season_number, league)
 
 
 def work_out_promotions(season_number):
@@ -292,7 +293,7 @@ def shift_bit_length(x):
     return 1 << (x-1).bit_length()
 
 
-def play_cup_fixtures(season_number):
+def play_cup_fixtures(season_number, player_folder, ):
     league_folder = os.environ['FOOTBALL_HOME'] + "//leagues//" + str(season_number)
     with open(league_folder + "//cup_fixtures.yaml", "r") as file:
         teams = yaml.safe_load(file)
@@ -302,6 +303,12 @@ def play_cup_fixtures(season_number):
     winners = [teams[0] + 1]
     for fixture in fixtures:
         # TODO: Actually play cup fixtures
+            comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
+                str(season_number) + 'cup' + str(fixture[0]) + str(fixture[1]) + ".txt"
+            match = game.Game([player_folder + "//players", player_folder + "//players"], orders, formation, name,
+                              comm_file)
+            match.play_game()
+            result = match.score
         if fixture[0] == "BYE":
             winner = 1
         elif fixture[1] == "BYE":
@@ -438,3 +445,18 @@ def sort_entire_league(season_number):
         if "fixtures" not in tier_folder and "round" not in tier_folder and "promotions" not in tier_folder:
             for folder in os.listdir(league_folder + "//" + tier_folder):
                 sort_league(league_folder + "//" + tier_folder + "//" + folder)
+
+
+def work_out_franchise_cost():
+    positions_total = {"QB": [0, 0], "FB": [0, 0], "RB": [0, 0], "OL": [0, 0], "OC": [0, 0], "WR": [0, 0],
+                       "TE": [0, 0], "DL": [0, 0], "DE": [0, 0], "LB": [0, 0], "MLB": [0, 0], "CB": [0, 0],
+                       "SF": [0, 0], "K": [0, 0], "GNR": [0, 0], "RET": [0, 0]}
+    final_totals = {"QB": 0, "FB": 0, "RB": 0, "OL": 0, "OC": 0, "WR": 0, "TE": 0, "DL": 0, "DE": 0, "LB": 0, "MLB": 0,
+                     "CB": 0,  "SF": 0,  "K": 0,  "GNR": 0,  "RET": 0, }
+    for player in os.listdir(os.environ['FOOTBALL_HOME'] + "//players//players"):
+        # TODO: Work out who is in which position and add them in
+        pass
+    for position in positions_total:
+        final_totals[position] = positions_total[position][0] / positions_total[position][1]
+
+    # TODO: Put final totals somewhere

@@ -17,6 +17,7 @@ def create_team(nationality, league_name):
     to_write["team name"] = team_name
     to_write["draft picks"] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     to_write["salary"] = 22000
+    to_write["trophies"] = {"cup": [0]}
     with open(os.environ['FOOTBALL_HOME'] + "//teams//ref//team_names.yaml", "w") as file:
         yaml.safe_dump(names, file)
     to_write["player"] = []
@@ -66,10 +67,11 @@ def create_team(nationality, league_name):
     percentages["special"] = {"time between plays": 35, "field goal range": 20}
     with open(os.environ['FOOTBALL_HOME'] + "//teams//orders//" + team_name + "-orders.yaml", "w") as file:
         yaml.safe_dump(percentages, file)
+    # TODO: Make stats file
     return team_name
 
 
-def create_player(nationality, team, team_id):
+def create_player(nationality, team, team_id, week, attrib, ideal_weight, ideal_height):
     with open(os.environ['FOOTBALL_HOME'] + "//players//ref//player_id.yaml", "r") as file:
         names = yaml.safe_load(file)
     new_name = smallest_missing_in_list(names)
@@ -91,9 +93,20 @@ def create_player(nationality, team, team_id):
     player["team"] = team
     player["team_id"] = team_id
     player["contract_value"] = 1000
+    player["franchised"] = False
+    player["franchise next season"] = False
     player["guarantee"] = 0
     player["age"] = 16 + randint(0, 3)
-    player["height"] = generate_height(player["age"])
+    height = [generate_height(player["age"]), generate_height(player["age"])]
+    if abs(height[0] - ideal_height) < abs(height[1] - ideal_height):
+        player["height"] = height[0]
+    else:
+        player["height"] = height[1]
+    weight = [generate_weight(player["height"]), generate_weight(player["height"])]
+    if abs(weight[0] - ideal_weight) < abs(weight[1] - ideal_weight):
+        player["weight"] = weight[0]
+    else:
+        player["weight"] = weight[1]
     player["weight"] = generate_weight(player["height"])
     player["base_weight"] = player["weight"]
     player["years_left"] = 0
