@@ -118,16 +118,15 @@ def create_player(nationality, team, team_id, week, attrib, ideal_weight, ideal_
     player["guarantee"] = 0
     player["age"] = 16 + randint(0, 3)
     height = [generate_height(player["age"]), generate_height(player["age"])]
-    if abs(height[0] - ideal_height) < abs(height[1] - ideal_height):
+    if abs(height[0] - ideal_height) < abs(height[1] - ideal_height) or ideal_height < 0:
         player["height"] = height[0]
     else:
         player["height"] = height[1]
     weight = [generate_weight(player["height"]), generate_weight(player["height"])]
-    if abs(weight[0] - ideal_weight) < abs(weight[1] - ideal_weight):
+    if abs(weight[0] - ideal_weight) < abs(weight[1] - ideal_weight) or ideal_weight:
         player["weight"] = weight[0]
     else:
         player["weight"] = weight[1]
-    player["weight"] = generate_weight(player["height"])
     player["base_weight"] = player["weight"]
     player["years_left"] = 0
     player["retiring"] = False
