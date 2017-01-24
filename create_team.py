@@ -246,6 +246,7 @@ def remove_player(player_id, team_id, minimum):
         with open(player_folder + "//free_agents.yaml", "r") as free_agent_file:
             free_agents = yaml.safe_load(free_agent_file)
         free_agents.update({player_id: {"team_id": team_id, "team": team_name, "asking": 1000}})
+        # TODO: Change the below to open a bid file on the player
         with open(player_folder + "//free_agents.yaml", "w") as free_agent_file:
             yaml.safe_dump(free_agents, free_agent_file)
         with open(team_folder + "//dead_money//" + team_id + ".yaml", "r") as dead_money_file:
