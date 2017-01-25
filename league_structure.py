@@ -17,6 +17,7 @@ import os
 import csv
 import pandas
 
+from shutil import copyfile
 from random import randint
 from american_football import game
 
@@ -293,27 +294,49 @@ def shift_bit_length(x):
     return 1 << (x-1).bit_length()
 
 
-def play_cup_fixtures(season_number, player_folder, ):
+def play_cup_fixtures(season_number, player_folder):
     league_folder = os.environ['FOOTBALL_HOME'] + "//leagues//" + str(season_number)
-    with open(league_folder + "//cup_fixtures.yaml", "r") as file:
-        teams = yaml.safe_load(file)
-    with open(league_folder + "//round_" + str(teams[0]) + ".yaml", "r") as file:
-        fixtures = yaml.safe_load(file)
+    team_folder = os.environ['FOOTBALL_HOME'] + "//teams//teams"
+    with open(league_folder + "//cup_fixtures.yaml", "r") as cup_file:
+        teams = yaml.safe_load(cup_file)
+    with open(league_folder + "//round_" + str(teams[0]) + ".yaml", "r") as round_file:
+        fixtures = yaml.safe_load(round_file)
 
     winners = [teams[0] + 1]
     for fixture in fixtures:
-        # TODO: Actually play cup fixtures
-            comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
-                str(season_number) + 'cup' + str(fixture[0]) + str(fixture[1]) + ".txt"
-            match = game.Game([player_folder + "//players", player_folder + "//players"], orders, formation, name,
-                              comm_file)
-            match.play_game()
-            result = match.score
+        name = [0, 0]
+        formation = [0, 0]
+        orders = ["", ""]
         if fixture[0] == "BYE":
             winner = 1
         elif fixture[1] == "BYE":
             winner = 0
         else:
+            for i in range(2):
+                with open(team_folder + "//teams//" + fixture[i] + ".yaml") as team_file:
+                    name[i] = yaml.safe_load(team_file)["team name"]
+                if not os.path.isfile(os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
+                                      str(season_number) + 'Cup' + str(fixture[0]) +
+                                      str(fixture[1]) + str(fixture[i]) + ".yaml"):
+                    copyfile(team_folder + "//orders//" + str(fixture[i]) + "-formation.yaml",
+                             os.environ['FOOTBALL_HOME'] + "//matches//formations//" +
+                             str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) +
+                             ".yaml")
+                    copyfile(team_folder + "//orders//" + str(fixture[i]) + "-orders.yaml",
+                             os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
+                             str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) +
+                             ".yaml")
+
+                formation[i] = os.environ['FOOTBALL_HOME'] + "//matches//formations//" + \
+                    str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) + ".yaml"
+                orders[i] = os.environ['FOOTBALL_HOME'] + "//matches//orders//" + \
+                    str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) + ".yaml"
+            comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
+                str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + ".txt"
+            match = game.Game([player_folder + "//players"], orders, formation, name, comm_file)
+            match.play_game()
+            result = match.score
+
             winner = randint(0, 1)
         winners.append(fixture[winner])
     with open(league_folder + "//cup_fixtures.yaml", "w") as file:
