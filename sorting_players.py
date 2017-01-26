@@ -17,11 +17,15 @@ def train_players():
 
 def new_players(week):
     for team in os.listdir(os.environ['FOOTBALL_HOME'] + "//teams//teams"):
+        with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + team) as team_file:
+            draft = yaml.safe_load(team_file)['draft picks']
+        week_draft = [draft[i] for i in range(len(draft)) if str(draft[i]) == str(week)]
         with open(os.environ['FOOTBALL_HOME'] + "//teams//scouting//scouts-" + team.replace(".yaml", ""), "r") \
                 as scout_file:
             scouts = yaml.safe_load(scout_file)
-        add_player(team.replace(".yaml", ""), attrib=scouts["attrib"], ideal_height=scouts["ideal_height"],
-                   ideal_weight=scouts["ideal_weight"], week=week, maximum=70)
+        for _ in range(len(week_draft)):
+            add_player(team.replace(".yaml", ""), attrib=scouts["attrib"], ideal_height=scouts["ideal_height"],
+                       ideal_weight=scouts["ideal_weight"], week=week, maximum=70)
 
 
 def check_position(player_stats):
