@@ -18,11 +18,15 @@ def create_team(nationality, league_name):
     to_write["draft picks"] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
     to_write["salary"] = 22000
     to_write["trophies"] = {"cup": [0]}
+    scout_base = {"ideal_height": -1, "ideal_weight": -1, "attrib": []}
+    with open(os.environ['FOOTBALL_HOME'] + "//teams//scouting//scouts-" + team_name + ".yaml", "w") as scout_file:
+        yaml.safe_dump(scout_base, scout_file)
     with open(os.environ['FOOTBALL_HOME'] + "//teams//ref//team_names.yaml", "w") as file:
         yaml.safe_dump(names, file)
-    to_write["player"] = []
+    to_write["player"] = {}
     for i in range(22):
-        to_write["player"].append(create_player(nationality, team_name, team_name))
+        to_write["player"].update(create_player(nationality, team_name, team_name, attrib=[], week=8,
+                                  ideal_height=-1, ideal_weight=-1))
     with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + team_name + ".yaml", "w") as file:
         yaml.safe_dump(to_write, file)
     with open(os.environ['FOOTBALL_HOME'] + "//teams//dead_money//" + team_name + ".yaml", "w") as dead_money_file:
@@ -30,12 +34,13 @@ def create_team(nationality, league_name):
     with open(os.environ['FOOTBALL_HOME'] + "//league_config//formation.yaml", "r") as file:
         formations = yaml.safe_load(file)
     starters = {}
+    players = list(to_write["player"].keys())
     for formation in formations["offense"]:
-        starters[formation] = [to_write["player"][i] for i in range(11)]
+        starters[formation] = [players[i] for i in range(11)]
     for formation in formations["defense"]:
-        starters[formation] = [to_write["player"][i] for i in range(11, 22)]
+        starters[formation] = [players[i] for i in range(11, 22)]
     for formation in formations["special"]:
-        starters[formation] = [to_write["player"][i] for i in range(11)]
+        starters[formation] = [players[i] for i in range(11)]
     with open(os.environ['FOOTBALL_HOME'] + "//teams//orders//" + team_name + "-formation.yaml", "w") as file:
         yaml.safe_dump(starters, file)
     percentages = {"offense": dict(), "defense": dict()}
@@ -71,6 +76,25 @@ def create_team(nationality, league_name):
     return team_name
 
 
+def create_low_attrib(week):
+    maximum = int((12 - week) / 2) * 20 + 300
+    return randint(0, maximum)
+
+
+def create_high_attrib(week, special):
+    total = 5
+    maxes = int((11 - week) / 2)
+    tot = 0
+    number = 600
+    if special:
+        tot += max(randint(0, number), max(0, randint(- 1.6 * number, number)), max(0, randint(-0.5 * number, number)))
+    for _ in range(special, maxes):
+        tot += max(randint(0, number), max(0, randint(- 1.6 * number, number)))
+    for _ in range(maxes, total):
+        tot += randint(0, number)
+    return 500 + tot / total - 100 * (tot > 200 * total)
+
+
 def create_player(nationality, team, team_id, week, attrib, ideal_weight, ideal_height):
     with open(os.environ['FOOTBALL_HOME'] + "//players//ref//player_id.yaml", "r") as file:
         names = yaml.safe_load(file)
@@ -98,34 +122,37 @@ def create_player(nationality, team, team_id, week, attrib, ideal_weight, ideal_
     player["guarantee"] = 0
     player["age"] = 16 + randint(0, 3)
     height = [generate_height(player["age"]), generate_height(player["age"])]
-    if abs(height[0] - ideal_height) < abs(height[1] - ideal_height):
+    if abs(height[0] - ideal_height) < abs(height[1] - ideal_height) or ideal_height < 0:
         player["height"] = height[0]
     else:
         player["height"] = height[1]
     weight = [generate_weight(player["height"]), generate_weight(player["height"])]
-    if abs(weight[0] - ideal_weight) < abs(weight[1] - ideal_weight):
+    if abs(weight[0] - ideal_weight) < abs(weight[1] - ideal_weight) or ideal_weight:
         player["weight"] = weight[0]
     else:
         player["weight"] = weight[1]
-    player["weight"] = generate_weight(player["height"])
     player["base_weight"] = player["weight"]
     player["years_left"] = 0
     player["retiring"] = False
     player["id"] = new_name
+    while len(attrib) < 3:
+        add = high_att[randint(0, len(high_att) - 1)]
+        while add in attrib:
+            add = high_att[randint(0, len(high_att) - 1)]
+        attrib.append(add)
     for attribute in low_att:
-        player[attribute] = 100 + randint(0, 300)
+        player[attribute] = 100 + create_low_attrib(week)
     for attribute in pos_att:
         player[attribute] = 150 + randint(0, 100)
     for attribute in high_att:
-        player[attribute] = 500 + (randint(0, 500) + randint(0, 500) +
-                                   randint(0, 500) + randint(0, 500) + randint(0, 500)) / 5
+        player[attribute] = create_high_attrib(week, attribute in attrib)
     with open(os.environ['FOOTBALL_HOME'] + "//players//players//" + player_id + ".yaml", "w") as file:
         yaml.safe_dump(player, file)
     training = {"file name": os.environ['FOOTBALL_HOME'] + "//players//players//" + player_id + ".yaml", "focus": "",
                 "route assignment": ""}
     with open(os.environ['FOOTBALL_HOME'] + "//players//training//" + player_id + ".yaml", "w") as file:
         yaml.safe_dump(training, file)
-    return player_id
+    return {player_id: player["name"]}
 
 
 def smallest_missing_in_list(list_of_numbers):
@@ -158,13 +185,14 @@ def name_player(nationality):
     return first_name + " " + second_name
 
 
-def add_player(team_id, maximum):
+def add_player(team_id, maximum, week, attrib, ideal_height, ideal_weight):
     team_folder = os.environ['FOOTBALL_HOME'] + "//teams"
     with open(team_folder + "//" + team_id + ".yaml", "r") as team_file:
         team = yaml.safe_load(team_file)
     if team["player"] < maximum:
         team_name = team["team name"]
-        team["player"].append(create_player(team["nationality"], team_name, team_id))
+        team["player"].append(create_player(team["nationality"], team_name, team_id, attrib=attrib, week=week,
+                                            ideal_height=ideal_height, ideal_weight=ideal_weight))
         team["salary"] += 1000
         with open(team_folder + "//" + team_id + ".yaml", "w") as team_file:
             yaml.safe_dump(team, team_file)
@@ -219,6 +247,7 @@ def remove_player(player_id, team_id, minimum):
         with open(player_folder + "//free_agents.yaml", "r") as free_agent_file:
             free_agents = yaml.safe_load(free_agent_file)
         free_agents.update({player_id: {"team_id": team_id, "team": team_name, "asking": 1000}})
+        # TODO: Change the below to open a bid file on the player
         with open(player_folder + "//free_agents.yaml", "w") as free_agent_file:
             yaml.safe_dump(free_agents, free_agent_file)
         with open(team_folder + "//dead_money//" + team_id + ".yaml", "r") as dead_money_file:
@@ -284,7 +313,8 @@ def make_team(name, nationality, tier_adjust=0):
     for player in team_stuff["player"]:
         remove_player(player, place, 18)
     for i in range(22):
-        team_stuff["player"].append(create_player(nationality, name, place))
+        team_stuff["player"].append(create_player(team_stuff["nationality"], name, place, attrib=[], week=8,
+                                                  ideal_height=-1, ideal_weight=-1))
     with open(team_folder + "//teams//" + place + ".yaml", "w") as team_file:
         yaml.safe_dump(team_stuff, team_file)
 

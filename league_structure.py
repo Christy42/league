@@ -17,6 +17,7 @@ import os
 import csv
 import pandas
 
+from shutil import copyfile
 from random import randint
 from american_football import game
 
@@ -169,8 +170,8 @@ def work_out_promotions(season_number):
     print(team_league)
     print("far out")
     print({"play_offs_up": play_offs_up, "promotions": promotions, "demotions": demotions,
-                        "tier_max": tier_max, "leagues": leagues, "team_league": team_league,
-                        "play_offs_down": play_offs_down})
+           "tier_max": tier_max, "leagues": leagues, "team_league": team_league,
+           "play_offs_down": play_offs_down})
     print(league_folder + "//promotions.yaml")
     with open(league_folder + "//promotions.yaml", "w") as file:
         yaml.safe_dump({"play_offs_up": play_offs_up, "promotions": promotions, "demotions": demotions,
@@ -193,9 +194,12 @@ def run_playoffs(league_folder):
                 next_team = randint(0, len(promotions["play_offs_up"][str(tier)]) - 1)
                 play_offs[str(tier)][league].append(promotions["play_offs_up"][str(tier)][next_team])
                 promotions["play_offs_up"][str(tier)].remove(promotions["play_offs_up"][str(tier)][next_team])
-            winner = run_play_offs(play_offs[str(tier)][league])
-
-            # TODO: Play_offs_up has been emptied.  Either create a second list or prevent it getting emptied.
+            next_round = run_play_offs(play_offs[str(tier)][league], league_folder[-1])
+            while len(next_round) > 1:
+                next_round = run_play_offs(next_round, league_folder[-1])
+            winner = next_round[0]
+            # TODO: Separate this into two functions so it can take course over a week (remember two games)
+            # TODO: Have a place for the games to be put in a file, put them there with their scores
             for team in play_offs[str(tier)][league]:
                 if team != winner and team in play_off_up_holder:
 
@@ -236,9 +240,47 @@ def run_playoffs(league_folder):
 
 
 # TODO: create a function to run the games and add all the needed teams to the correct lists
-def run_play_offs(team_list):
-    winner = randint(0, len(team_list) - 1)
-    return team_list[winner]
+def run_play_offs(team_list, season_number):
+    team_folder = os.environ['FOOTBALL_HOME'] + "teams//teams"
+    player_folder = os.environ['FOOTBALL_HOME'] + "players//players"
+    next_round = []
+    for play_off in range(0, int(len(team_list) / 2)):
+        name = [0, 0]
+        formation = [0, 0]
+        orders = ["", ""]
+        for i in range(2):
+            with open(team_folder + "//teams//" + team_list[2 * play_off + i] + ".yaml") as team_file:
+                name[i] = yaml.safe_load(team_file)["team name"]
+                if not os.path.isfile(os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
+                                      str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) +
+                                      str(team_list[2 * play_off + 1]) + str(team_list[2 * play_off + i]) + ".yaml"):
+                    copyfile(team_folder + "//orders//" + str(team_list[2 * play_off + i]) + "-formation.yaml",
+                             os.environ['FOOTBALL_HOME'] + "//matches//formations//" +
+                             str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) +
+                             str(team_list[2 * play_off + 1]) + str(team_list[2 * play_off + i]) + ".yaml")
+                    copyfile(team_folder + "//orders//" + str(team_list[2 * play_off + i]) + "-orders.yaml",
+                             os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
+                             str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) +
+                             str(team_list[2 * play_off + 1]) + str(team_list[2 * play_off + i]) + ".yaml")
+
+                formation[i] = os.environ['FOOTBALL_HOME'] + "//matches//formations//" + \
+                    str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) + str(team_list[2 * play_off + 1]) + \
+                    str(team_list[2 * play_off + i]) + ".yaml"
+                orders[i] = os.environ['FOOTBALL_HOME'] + "//matches//orders//" + \
+                    str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) + str(team_list[2 * play_off + 1]) + \
+                    str(team_list[2 * play_off + i]) + ".yaml"
+            comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
+                str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) + str(team_list[2 * play_off + 1]) + \
+                ".txt"
+            match = game.Game([player_folder], orders, formation, name, comm_file, "cup")
+            match.play_game()
+            result = match.score
+            if result[0] > result[1]:
+                next_round.append(team_list[2 * play_off])
+            else:
+                next_round.append(team_list[2 * play_off + 1])
+
+    return next_round
 
 
 # TODO: create a function to take these from a file and enact/remove promotions
@@ -293,28 +335,53 @@ def shift_bit_length(x):
     return 1 << (x-1).bit_length()
 
 
-def play_cup_fixtures(season_number, player_folder, ):
+def play_cup_fixtures(season_number, player_folder):
     league_folder = os.environ['FOOTBALL_HOME'] + "//leagues//" + str(season_number)
-    with open(league_folder + "//cup_fixtures.yaml", "r") as file:
-        teams = yaml.safe_load(file)
-    with open(league_folder + "//round_" + str(teams[0]) + ".yaml", "r") as file:
-        fixtures = yaml.safe_load(file)
+    team_folder = os.environ['FOOTBALL_HOME'] + "//teams//teams"
+    with open(league_folder + "//cup_fixtures.yaml", "r") as cup_file:
+        teams = yaml.safe_load(cup_file)
+    with open(league_folder + "//round_" + str(teams[0]) + ".yaml", "r") as round_file:
+        fixtures = yaml.safe_load(round_file)
 
     winners = [teams[0] + 1]
     for fixture in fixtures:
-        # TODO: Actually play cup fixtures
-            comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
-                str(season_number) + 'cup' + str(fixture[0]) + str(fixture[1]) + ".txt"
-            match = game.Game([player_folder + "//players", player_folder + "//players"], orders, formation, name,
-                              comm_file)
-            match.play_game()
-            result = match.score
+        name = [0, 0]
+        formation = [0, 0]
+        orders = ["", ""]
         if fixture[0] == "BYE":
             winner = 1
         elif fixture[1] == "BYE":
             winner = 0
         else:
-            winner = randint(0, 1)
+            for i in range(2):
+                with open(team_folder + "//teams//" + fixture[i] + ".yaml") as team_file:
+                    name[i] = yaml.safe_load(team_file)["team name"]
+                if not os.path.isfile(os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
+                                      str(season_number) + 'Cup' + str(fixture[0]) +
+                                      str(fixture[1]) + str(fixture[i]) + ".yaml"):
+                    copyfile(team_folder + "//orders//" + str(fixture[i]) + "-formation.yaml",
+                             os.environ['FOOTBALL_HOME'] + "//matches//formations//" +
+                             str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) +
+                             ".yaml")
+                    copyfile(team_folder + "//orders//" + str(fixture[i]) + "-orders.yaml",
+                             os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
+                             str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) +
+                             ".yaml")
+
+                formation[i] = os.environ['FOOTBALL_HOME'] + "//matches//formations//" + \
+                    str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) + ".yaml"
+                orders[i] = os.environ['FOOTBALL_HOME'] + "//matches//orders//" + \
+                    str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) + ".yaml"
+            comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
+                str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + ".txt"
+            match = game.Game([player_folder + "//players"], orders, formation, name, comm_file, "cup")
+            match.play_game()
+            result = match.score
+
+        if result[1] > result[0]:
+           winner = 1
+        else:
+           winner = 0
         winners.append(fixture[winner])
     with open(league_folder + "//cup_fixtures.yaml", "w") as file:
         yaml.safe_dump(winners, file)
