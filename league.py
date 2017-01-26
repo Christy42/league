@@ -98,8 +98,7 @@ class LeagueTable:
                     str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) + ".yaml"
             comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
                 str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + ".txt"
-            match = game.Game([player_folder + "//players"], orders, formation, name,
-                              comm_file)
+            match = game.Game(player_folder + "//players", orders, formation, name, comm_file)
             match.play_game()
             result = match.score
             # result = [randint(0, 30), randint(0, 30)]

@@ -34,12 +34,13 @@ def create_team(nationality, league_name):
     with open(os.environ['FOOTBALL_HOME'] + "//league_config//formation.yaml", "r") as file:
         formations = yaml.safe_load(file)
     starters = {}
+    players = list(to_write["player"].keys())
     for formation in formations["offense"]:
-        starters[formation] = [to_write["player"][i] for i in range(11)]
+        starters[formation] = [players[i] for i in range(11)]
     for formation in formations["defense"]:
-        starters[formation] = [to_write["player"][i] for i in range(11, 22)]
+        starters[formation] = [players[i] for i in range(11, 22)]
     for formation in formations["special"]:
-        starters[formation] = [to_write["player"][i] for i in range(11)]
+        starters[formation] = [players[i] for i in range(11)]
     with open(os.environ['FOOTBALL_HOME'] + "//teams//orders//" + team_name + "-formation.yaml", "w") as file:
         yaml.safe_dump(starters, file)
     percentages = {"offense": dict(), "defense": dict()}
