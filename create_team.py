@@ -23,10 +23,10 @@ def create_team(nationality, league_name):
         yaml.safe_dump(scout_base, scout_file)
     with open(os.environ['FOOTBALL_HOME'] + "//teams//ref//team_names.yaml", "w") as file:
         yaml.safe_dump(names, file)
-    to_write["player"] = []
+    to_write["player"] = {}
     for i in range(22):
-        to_write["player"].append(nationality, team_name, team_name, attrib=[], week=8,
-                                  ideal_height=-1, ideal_weight=-1)
+        to_write["player"].update(create_player(nationality, team_name, team_name, attrib=[], week=8,
+                                  ideal_height=-1, ideal_weight=-1))
     with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + team_name + ".yaml", "w") as file:
         yaml.safe_dump(to_write, file)
     with open(os.environ['FOOTBALL_HOME'] + "//teams//dead_money//" + team_name + ".yaml", "w") as dead_money_file:
@@ -151,7 +151,7 @@ def create_player(nationality, team, team_id, week, attrib, ideal_weight, ideal_
                 "route assignment": ""}
     with open(os.environ['FOOTBALL_HOME'] + "//players//training//" + player_id + ".yaml", "w") as file:
         yaml.safe_dump(training, file)
-    return player_id
+    return {player_id: player["name"]}
 
 
 def smallest_missing_in_list(list_of_numbers):
