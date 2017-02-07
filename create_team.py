@@ -242,7 +242,7 @@ def remove_player(player_id, team_id, minimum, force=False):
         player["team_id"] = "N/A"
         team_name = player["team"]
         player["team"] = "N/A"
-        with open(player_folder + "//players//" + player_id, "w") as player_file:
+        with open(player_folder + "//players//" + player_id + ".yaml", "w") as player_file:
             yaml.safe_dump(player, player_file)
         with open(player_folder + "//free_agents.yaml", "r") as free_agent_file:
             free_agents = yaml.safe_load(free_agent_file)
