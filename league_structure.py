@@ -88,7 +88,7 @@ def create_tier(tier):
         team = {}
         country = ["Ireland", "United Kingdom", "United States of America", "Canada", "Australia"]
         for _ in range(12):
-            t = create_team(country[randint(0, 4)], str(tier) + " " + str(i))
+            t = create_team(country[randint(0, 4)], league_name)
             team.update({t: t})
         if not os.path.exists(base_name + "//" + str(tier) + "//" + league_name):
             os.makedirs(base_name + "//" + str(tier) + "//" + league_name)
@@ -144,7 +144,6 @@ def work_out_promotions(season_number):
             play_offs_down[str(tier)] = {}
             tier_max = tier
             for league in os.listdir(league_folder + "//" + str(tier)):
-                print("hihg")
                 leagues[str(tier)][str(league)] = []
                 play_offs_down[str(tier)][str(league)] = []
                 with open(league_folder + "//" + str(tier) + "//" + league + "//table.csv") as table_file:
@@ -479,7 +478,7 @@ def check_salary_cap(salary_cap):
         while salary > salary_cap:
 
             fired = randint(0, len(players))
-            remove_player(players[fired], team_file[:len(team_file) - 5], -1)
+            remove_player(players[fired], team_file[:len(team_file) - 5], -1, True)
             salaries.pop(players[fired])
             salary = sum(list(salaries.values()))
 
