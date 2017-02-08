@@ -1,5 +1,6 @@
 import yaml
 import os
+import csv
 
 from random import randint
 
@@ -149,7 +150,7 @@ def create_player(nationality, team, team_id, week, attrib, ideal_weight, ideal_
     with open(os.environ['FOOTBALL_HOME'] + "//players//players//" + player_id + ".yaml", "w") as file:
         yaml.safe_dump(player, file)
     training = {"file name": os.environ['FOOTBALL_HOME'] + "//players//players//" + player_id + ".yaml", "focus": "",
-                "route assignment": ""}
+                "route assignment": "", "weight direction": ""}
     with open(os.environ['FOOTBALL_HOME'] + "//players//training//" + player_id + ".yaml", "w") as file:
         yaml.safe_dump(training, file)
     return {player_id: player["name"]}
@@ -171,7 +172,6 @@ def smallest_missing_in_list(list_of_numbers):
             partial = partial[:half]
             lowest_fail = half
             half -= max(int(len(partial) / 2), 1)
-
     return lowest_fail
 
 
@@ -223,18 +223,20 @@ def ensure_team_has_minimum(minimum):
         with open(team_folder + "//teams//" + file, "r") as team_file:
             team = yaml.safe_load(team_file)
         while len(team["player"]) < minimum:
-            add_player(file[:len(file) - 5], 999, attrib=[], ideal_weight=-1, ideal_height=-1, week=11)
+
+            add_player(file[:len(file) - 5], 999, attrib=[], ideal_height=-1, ideal_weight=-1, week=11)
         with open(team_folder + "//teams//" + file, "w") as team_file:
             yaml.safe_dump(team, team_file)
 
 
-def remove_player(player_id, team_id, minimum):
+def remove_player(player_id, team_id, minimum, force=False):
     team_folder = os.environ['FOOTBALL_HOME'] + "//teams"
     player_folder = os.environ['FOOTBALL_HOME'] + "//players"
     with open(team_folder + "//teams//" + team_id + ".yaml") as team_file:
         team = yaml.safe_load(team_file)
-    if len(team["player"]) > minimum:
-        team["player"].remove(player_id)
+
+    if len(team["player"]) > minimum or force is True:
+        del team["player"][player_id]
         with open(team_folder + "//teams//" + team_id + ".yaml", "w") as team_file:
             yaml.safe_dump(team, team_file)
         with open(player_folder + "//players//" + player_id + ".yaml", "r") as player_file:
@@ -254,7 +256,7 @@ def remove_player(player_id, team_id, minimum):
             dead_money = yaml.safe_load(dead_money_file)
         dead_money.update({player_id: {"years": player["years_left"],
                                        "amount": player["guarantee"] * player["contract_value"]}})
-        with open(team_folder + "//dead_money//" + team_id + ".yaml", "w") as dead_money_file:
+        with open(team_folder + "//dead_money//" + str(team_id) + ".yaml", "w") as dead_money_file:
             yaml.safe_dump(dead_money, dead_money_file)
     else:
         # TODO: put in something to point out to the user that the player may not be removed
@@ -276,14 +278,20 @@ def generate_weight(height):
     return weight
 
 
-def make_team(name, nationality, tier_adjust=0):
-    league_folder = os.environ['FOOTBALL_HOME'] + "//leagues"
+def make_team(name, nationality, season_number, tier_adjust=0):
+    league_folder = os.environ['FOOTBALL_HOME'] + "//leagues//" + str(season_number)
     team_folder = os.environ['FOOTBALL_HOME'] + "//teams"
+    print(season_number)
+    print("b")
+    print(league_folder)
     files = os.listdir(league_folder)
     tier = 0
+
     for file in files:
-        if "round" not in file and "cup" not in file and "promotions" not in file and int(file) > tier:
-            tier = file
+        if "round" not in file and "cup" not in file and "promotions" not in file and 'season' not in file:
+            if int(file) > int(tier):
+                tier = int(file)
+
     tier -= tier_adjust
     teams = []
     for league in os.listdir(league_folder + "//" + str(tier)):
@@ -292,31 +300,56 @@ def make_team(name, nationality, tier_adjust=0):
     for team in teams:
         with open(team_folder + "//teams//" + team + ".yaml") as team_file:
             bot = yaml.safe_load(team_file)["bot"]
-        if bot is True:
+        if bot is False:
             teams.remove(team)
-    if len(teams) > 0:
+    print("adksljf")
+    print(teams)
+    if len(teams) == 0:
         if tier > 1:
-            make_team(name, nationality, tier_adjust + 1)
+            make_team(name, nationality, season_number, tier_adjust + 1)
         else:
             print("No teams available")
     place = randint(0, len(teams) - 1)
-    with open(team_folder + "//teams//" + place + ".yaml", "r") as team_file:
+    print(team_folder + "//teams//" + teams[place] + ".yaml")
+    with open(team_folder + "//teams//" + teams[place] + ".yaml", "r") as team_file:
         team_stuff = yaml.safe_load(team_file)
     team_stuff["bot"] = False
     team_stuff["nationality"] = nationality
     team_stuff["team name"] = name
     team_stuff["salary"] = 22000
     team_stuff["draft picks"] = list(range(1, 12))
-    with open(league_folder + "//" + str(tier) + "//" + team_stuff["leagues name"] + "//table.csv") as csv_file:
-        pass
-    # TODO: Put in team name into league tables.
+    print("team")
+    print(team_stuff)
+    new_table = []
+    print(tier)
+    print(teams[place])
+    with open(league_folder + "//" + str(tier) + "//" + team_stuff["leagues name"] + "//table.csv", "r") as csv_file:
+        table = csv.reader(csv_file, delimiter=',', quotechar="~")
+        for row in table:
+            new_table.append(row)
+
+    for row in new_table:
+        print(row)
+        print(team_stuff["leagues name"])
+        print(teams[place])
+        if teams[place] == row[1]:
+            print("XXX")
+            row[2] = name
+    with open(league_folder + "//" + str(tier) + "//" + team_stuff["leagues name"] + "//table.csv", 'w') as csv_file:
+        writer = csv.writer(csv_file, delimiter=',',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+        print(new_table)
+        for row in new_table:
+            writer.writerow(row)
+    print(team_stuff)
     for player in team_stuff["player"]:
-        remove_player(player, place, 18)
+        remove_player(player, teams[place], 18, True)
     for i in range(22):
-        team_stuff["player"].append(create_player(team_stuff["nationality"], name, place, attrib=[], week=8,
+        team_stuff["player"].update(create_player(team_stuff["nationality"], name, teams[place], attrib=[], week=8,
                                                   ideal_height=-1, ideal_weight=-1))
-    with open(team_folder + "//teams//" + place + ".yaml", "w") as team_file:
+    with open(team_folder + "//teams//" + teams[place] + ".yaml", "w") as team_file:
         yaml.safe_dump(team_stuff, team_file)
+    # TODO: Change name in cup - cup fixtures file and latest round.  Reset trophies.
 
 
 def update_draft_picks(week):
