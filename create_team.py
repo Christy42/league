@@ -223,7 +223,7 @@ def ensure_team_has_minimum(minimum):
         with open(team_folder + "//teams//" + file, "r") as team_file:
             team = yaml.safe_load(team_file)
         while len(team["player"]) < minimum:
-            add_player(file[:len(file) - 5], 999)
+            add_player(file[:len(file) - 5], 999, attrib=[], ideal_weight=-1, ideal_height=-1, week=11)
         with open(team_folder + "//teams//" + file, "w") as team_file:
             yaml.safe_dump(team, team_file)
 
@@ -235,14 +235,14 @@ def remove_player(player_id, team_id, minimum):
         team = yaml.safe_load(team_file)
     if len(team["player"]) > minimum:
         team["player"].remove(player_id)
-        with open(team_folder + "//teams//" + team_id, "w") as team_file:
+        with open(team_folder + "//teams//" + team_id + ".yaml", "w") as team_file:
             yaml.safe_dump(team, team_file)
         with open(player_folder + "//players//" + player_id + ".yaml", "r") as player_file:
             player = yaml.safe_load(player_file)
         player["team_id"] = "N/A"
         team_name = player["team"]
         player["team"] = "N/A"
-        with open(player_folder + "//players//" + player_id, "w") as player_file:
+        with open(player_folder + "//players//" + player_id + ".yaml", "w") as player_file:
             yaml.safe_dump(player, player_file)
         with open(player_folder + "//free_agents.yaml", "r") as free_agent_file:
             free_agents = yaml.safe_load(free_agent_file)
