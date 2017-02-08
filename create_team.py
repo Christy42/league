@@ -341,15 +341,20 @@ def make_team(name, nationality, season_number, tier_adjust=0):
         print(new_table)
         for row in new_table:
             writer.writerow(row)
-    print(team_stuff)
     for player in team_stuff["player"]:
         remove_player(player, teams[place], 18, True)
     for i in range(22):
         team_stuff["player"].update(create_player(team_stuff["nationality"], name, teams[place], attrib=[], week=8,
                                                   ideal_height=-1, ideal_weight=-1))
+    team_stuff["trophies"] = {'cup': [0]}
     with open(team_folder + "//teams//" + teams[place] + ".yaml", "w") as team_file:
         yaml.safe_dump(team_stuff, team_file)
-    # TODO: Change name in cup - cup fixtures file and latest round.  Reset trophies.
+    with open(team_folder + "//ref//team_id.yaml", "r") as id_file:
+        ids = yaml.safe_load(id_file)
+    ids.update({name: teams[place]})
+    with open(team_folder + "//ref//team_id.yaml", "w") as id_file:
+        yaml.safe_dump(ids, id_file)
+    # TODO: Change name in cup - cup fixtures file and latest round.
 
 
 def update_draft_picks(week):
