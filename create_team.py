@@ -16,7 +16,7 @@ def create_team(nationality, league_name):
         names = names[:new_name] + [new_name] + names[new_name:]
     team_name = "Team_" + str(new_name)
     to_write["team name"] = team_name
-    to_write["draft picks"] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    to_write["draft picks"] = list(range(1, 12))
     to_write["salary"] = 22000
     to_write["trophies"] = {"cup": [0]}
     scout_base = {"ideal_height": -1, "ideal_weight": -1, "attrib": []}
@@ -215,6 +215,8 @@ def add_player_old(team_id, player_id, maximum, max_salary_amount):
         player["team"] = team["team name"]
         with open(player_folder + "//" + player_id + ".yaml", "w") as player_file:
             yaml.safe_dump(player, player_file)
+        return True
+    return False
 
 
 def ensure_team_has_minimum(minimum):
