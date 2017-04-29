@@ -127,6 +127,12 @@ def update_prices():
                    10: {"bought": 0, "sold": 0}, 11: {"bought": 0, "sold": 0}}
     with open(os.environ['FOOTBALL_HOME'] + "//trading//trade_count.yaml", "w") as count_file:
         yaml.safe_dump(count_reset, count_file)
-    # TODO: Update trade_value based on count
+    for val in count:
+        if count[val]["bought"] != count[val]["sold"]:
+            max_up = min(500, 10 * abs(count["bought"] - count["sold"]))
+            change = min(count[val]["bought"] / (count[val]["bought"] + count[val]["sold"]) + 0.5, max_up)
+            change = count[val] - int(max(change, -max_up)) * count[val]
+            trade_value[val] -= change
+    # =INT(MAX(MIN(B3-B3*(D3/(D3+E3)+0.5); 500;ABS(D3-E3)*10);-500;-ABS(D3-E3)*10))
     with open(os.environ['FOOTBALL_HOME'] + "//trading//trade_values.yaml", "2") as value_file:
         yaml.safe_dump(trade_value, value_file)
