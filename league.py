@@ -80,28 +80,35 @@ class LeagueTable:
             for i in range(2):
                 with open(team_folder + "//teams//" + games[g][i] + ".yaml") as team_file:
                     name[i] = yaml.safe_load(team_file)["team name"]
+                if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no) +
+                                     "//" + str(league)):
+                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no) +
+                             "//" + str(league))
+                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) + "//" + str(league))
                 if not os.path.isfile(os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
-                                      str(season_no) + str(league) + str(games[g][0]) +
+                                      str(season_no) + "//" + str(league) + "//" + str(games[g][0]) +
                                       str(games[g][1]) + str(games[g][i]) + ".yaml"):
                     copyfile(team_folder + "//orders//" + str(games[g][i]) + "-formation.yaml",
-                             os.environ['FOOTBALL_HOME'] + "//matches//formations//" +
-                             str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) +
+                             os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no) +
+                             "//" + str(league) + "//" + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) +
                              ".yaml")
                     copyfile(team_folder + "//orders//" + str(games[g][i]) + "-orders.yaml",
-                             os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
-                             str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) +
+                             os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) +
+                             "//" + str(league) + "//" + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) +
                              ".yaml")
 
-                formation[i] = os.environ['FOOTBALL_HOME'] + "//matches//formations//" + \
-                    str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) + ".yaml"
-                orders[i] = os.environ['FOOTBALL_HOME'] + "//matches//orders//" + \
-                    str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) + ".yaml"
+                formation[i] = os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no) + \
+                    "//" + str(league) + "//" + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) + ".yaml"
+                orders[i] = os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) + \
+                    "//" + str(league) + "//" + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) + ".yaml"
             comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
-                str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + ".txt"
+                str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + ".yaml"
             stats_file = os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
-                str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + ".txt"
+                str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + ".yaml"
             match = game.Game(player_folder + "//players", orders, formation, name, comm_file, stats_file)
-            match.play_game()
+            team_stats_folder = os.environ['FOOTBALL_HOME'] + "//teams//stats"
+            player_stats_folder = os.environ['FOOTBALL_HOME'] + "//players//stats"
+            match.play_game(season_no, team_stats_folder, player_stats_folder)
             result = match.score
             # result = [randint(0, 30), randint(0, 30)]
             result_0 = [games[g][0], result[0]]
@@ -188,6 +195,7 @@ class LeagueTable:
         cols = set_column_sequence(stats, ["position", "team name", "team id", "played", "wins", "draws", "losses",
                                            "win%", "for",
                                            "against", "points difference"])
+        del cols['']
         with open(self._csv_file, "w") as file:
             file.write(cols.to_csv())
 
@@ -205,6 +213,10 @@ class LeagueTable:
     def display_file(self):
         # Will display the file in an easy to read format (maybe csv for the moment)
         pass
+
+    def update_stats(self):
+        pass
+
 
 # TODO: Create set of leagues each with 12 teams.  Sets us a schedule and holds it ready to play
 
