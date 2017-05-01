@@ -37,7 +37,7 @@ def trade_decisions():
                 result = create_team.add_player_old(new_team, file[7:-5],
                                                     os.environ["MAX_TEAM"], os.environ["MAX_SALARY"])
                 if result:
-                    create_team.remove_player(file[7:-5], old_team, os.environ["MIN_TEAM"], force=True)
+                    create_team.remove_player(file[7:-5], old_team, os.environ["MIN_TEAM"], force_trade=True)
                     with open(os.environ['FOOTBALL_HOME'] + "teams//teams//Team_" + old_team + ".yaml", "r") as \
                             team_file:
                         team_stats = yaml.safe_load(team_file)

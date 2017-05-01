@@ -136,7 +136,8 @@ def create_player(nationality, team, team_id, week, attrib, ideal_weight, ideal_
     player["years_left"] = 0
     player["retiring"] = False
     player["id"] = new_name
-    while len(attrib) < 3:
+    desired_attrib_length = 3 if len(attrib) > 0 else 4
+    while len(attrib) < desired_attrib_length:
         add = high_att[randint(0, len(high_att) - 1)]
         while add in attrib:
             add = high_att[randint(0, len(high_att) - 1)]
@@ -231,13 +232,15 @@ def ensure_team_has_minimum(minimum):
             yaml.safe_dump(team, team_file)
 
 
-def remove_player(player_id, team_id, minimum, force=False):
+def remove_player(player_id, team_id, minimum, force=False, force_trade=False):
     team_folder = os.environ['FOOTBALL_HOME'] + "//teams"
     player_folder = os.environ['FOOTBALL_HOME'] + "//players"
     with open(team_folder + "//teams//" + team_id + ".yaml", "r") as team_file:
         team = yaml.safe_load(team_file)
 
-    if len(team["player"]) > minimum or force is True:
+    if len(team["player"]) > minimum or force is True or force_trade is True:
+        if len(team["player"]) <= minimum and force_trade is True:
+            add_player(team_id, os.environ["TEAM_MAX"], 11, [], -1, -1)
         del team["player"][player_id]
         potential_players = list(team["player"].keys())[:11]
         with open(team_folder + "//teams//" + team_id + ".yaml", "w") as team_file:
