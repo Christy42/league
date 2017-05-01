@@ -108,7 +108,7 @@ class LeagueTable:
             match = game.Game(player_folder + "//players", orders, formation, name, comm_file, stats_file)
             team_stats_folder = os.environ['FOOTBALL_HOME'] + "//teams//stats"
             player_stats_folder = os.environ['FOOTBALL_HOME'] + "//players//stats"
-            match.play_game(season_no, team_stats_folder, player_stats_folder)
+            match.play_game(season_no, team_stats_folder, player_stats_folder, [str(games[g][0]), str(games[g][1])])
             result = match.score
             # result = [randint(0, 30), randint(0, 30)]
             result_0 = [games[g][0], result[0]]
