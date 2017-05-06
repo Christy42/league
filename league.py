@@ -71,7 +71,6 @@ class LeagueTable:
         with open(self._yaml_file, "r") as file:
             games = yaml.safe_load(file)[week_number]
         scores = []
-
         plays = {}
         for play_file in os.listdir(os.environ['FOOTBALL_HOME'] + "//plays_config//offense_plays"):
             with open(os.environ['FOOTBALL_HOME'] + "//plays_config//offense_plays//" + play_file, "r") as plays_file:
@@ -87,11 +86,14 @@ class LeagueTable:
             for i in range(2):
                 with open(team_folder + "//teams//" + games[g][i] + ".yaml") as team_file:
                     name[i] = yaml.safe_load(team_file)["team name"]
-                if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no) +
+                if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no)):
+                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no))
+                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no))
+                if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) +
                                      "//" + str(league)):
-                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no) +
-                             "//" + str(league))
                     os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) + "//" + str(league))
+                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no) + "//" +
+                             str(league))
                 if not os.path.isfile(os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
                                       str(season_no) + "//" + str(league) + "//" + str(games[g][0]) +
                                       str(games[g][1]) + str(games[g][i]) + ".yaml"):
@@ -124,24 +126,36 @@ class LeagueTable:
             for j in range(2):
                 formation_amounts = {}
                 route_amounts = {}
-                with open(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) + "//" + str(league) +\
+                with open(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) + "//" + str(league) +
                           "//" + str(games[g][0]) + str(games[g][1]) + str(games[g][j]) + ".yaml", "r") as order_file:
                     order = yaml.safe_load(order_file)
+                print(order["offense"]["1 Cross Up"])
+                print(order["offense"]["1 Deep Attack"])
+                print("test")
+                with open(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no) + "//" + str(league) +
+                          "//" + str(games[g][0]) + str(games[g][1]) + str(games[g][j]) + ".yaml", "r") as order_file:
+                    formation_stats = yaml.safe_load(order_file)
                 for play in order["defense"]:
                     if play != "kick return":
                         if plays[play]["formation"] in list(formation_amounts.keys()):
-                            formation_amounts[plays[play]["formation"]] += sum(order["defense"][play].values())
+                            formation_amounts[plays[play]["formation"]] += sum(order["defense"][play].values()) / \
+                                                                          len(order["defense"][play].values())
                         else:
-                            formation_amounts[plays[play]["formation"]] = sum(order["defense"][play].values())
+                            formation_amounts[plays[play]["formation"]] = sum(order["defense"][play].values()) / \
+                                                                          len(order["defense"][play].values())
+                print(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) + "//" + str(league) +
+                      "//" + str(games[g][0]) + str(games[g][1]) + str(games[g][j]) + ".yaml")
                 for play in order["offense"]:
-                    if play not in ["kick off", "punting", "kicking"]:
+                    if sum(order["offense"][play].values()) > 0 and play not in ["kick off", "punting", "kicking"]:
+                        print(order["offense"][play])
+                        print(play)
                         cut = 2 + (play[2] == " ")
-                        cut_name = play[cut]
+                        cut_name = play[cut:]
                         if plays[cut_name]["formation"] in list(formation_amounts.keys()):
-                            formation_amounts[plays[cut_name]["formation"]] += sum(order["offense"][play].values())
+                            formation_amounts[plays[cut_name]["formation"]] += sum(order["offense"][play].values()) / 4
                         else:
                             formation_amounts[plays[cut_name]["formation"]] = sum(order["offense"][play].values())
-                        for i in len(plays[cut_name]["assignments"]):
+                        for i in range(len(plays[cut_name]["assignments"])):
                             if "BLOCK" not in plays[cut_name]["assignments"][i].upper() and "RUN" not in \
                               plays[cut_name]["assignments"][i].upper():
                                 if plays[cut_name]["formation"] not in list(route_amounts.keys()):
@@ -153,37 +167,40 @@ class LeagueTable:
                                     route_amounts[plays[cut_name]["formation"]][i][plays[cut_name]["assignments"][i]] =\
                                         0
                                 route_amounts[plays[cut_name]["formation"]][i][plays[cut_name]["assignments"][i]] += \
-                                    sum(order["offense"][play].values())
-                        players_train = {}
-                        for formation in formation_amounts:
-                            for i in len(formation["assignments"]):
-                                player = formation["assignments"][i]
-                                if player not in players_train.keys():
-                                    players_train[player] = {}
-                                    players_train[player]["formation"] = {}
-                                    players_train[player]["routes"] = {}
-                                if formation not in players_train[player].keys():
-                                    players_train[player]["formation"][formation] = 0
-                                players_train[player]["formation"][formation] += formation_amounts[formation]
+                                    sum(order["offense"][play].values()) / 4
+                players_train = {}
+                print("formation amount")
+                print(formation_amounts)
+                for formation in formation_amounts:
+                    for i in range(11):
+                        player = formation_stats[formation][i]
+                        if player not in players_train.keys():
+                            players_train[player] = {}
+                            players_train[player]["formation"] = {}
+                            players_train[player]["routes"] = {}
+                        if formation not in players_train[player].keys():
+                            players_train[player]["formation"][formation] = 0
+                        players_train[player]["formation"][formation] += formation_amounts[formation]
+                        if formation in route_amounts:
+                            if i in route_amounts[formation].keys():
                                 for route in route_amounts[formation][i]:
                                     if route not in players_train[player]["routes"]:
                                         players_train[player]["routes"][route] = 0
                                     players_train[player]["routes"][route] += route_amounts[formation][i][route]
-                        for i in range(2):
-                            with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + games[g][i] + ".yaml", "r") \
-                              as team_file:
-                                players = yaml.safe_load(team_file)["player"]
-                            for player in players:
-                                if player in players_train[player]:
-                                    position = self.find_position(player, players_train[player]["formation"],
-                                                                  os.environ['FOOTBALL_HOME'] +
-                                                                  "//matches//formations//" + str(season_no) + "//" +
-                                                                  str(league) + "//" + str(games[g][0]) +
-                                                                  str(games[g][1]) + str(games[g][i]) + ".yaml")
-                                    match_training.match_training(
-                                        os.environ['FOOTBALL_HOME'] + "//players//players//Player" + player + ".yaml",
-                                        players_train[player]["routes"],
-                                                                  players_train[player]["formation"], position)
+                for i in range(2):
+                    with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + games[g][i] + ".yaml", "r") \
+                      as team_file:
+                        players = yaml.safe_load(team_file)["player"]
+                    for player in players:
+                        if player in players_train:
+                            position = self.find_position(player, players_train[player]["formation"],
+                                                          os.environ['FOOTBALL_HOME'] +
+                                                          "//matches//formations//" + str(season_no) + "//" +
+                                                          str(league) + "//" + str(games[g][0]) +
+                                                          str(games[g][1]) + str(games[g][i]) + ".yaml")
+                            match_training.match_training(
+                                os.environ['FOOTBALL_HOME'] + "//players//players//" + player + ".yaml",
+                                players_train[player]["routes"], players_train[player]["formation"], position)
         # Amalgamate route data and formation data into per player, so create a dict with player_ids as keys,
         # accumulate the formations and routes run by going through the data and get it out for the match training
         # Need to actually play the above games
@@ -194,9 +211,9 @@ class LeagueTable:
     def find_position(player_id, formation_amounts, formation_file):
         max_amount = 0
         position = "_exp"
-        with open(os.environ['FOOTBALL_HOME'] +"//formations_config//test_yaml_defense_formation.yaml", "r") as form:
+        with open(os.environ['FOOTBALL_HOME'] + "//formations_config//test_yaml_defense_formation.yaml", "r") as form:
             formations = yaml.safe_load(form)
-        with open(os.environ['FOOTBALL_HOME'] +"//formations_config//test_yaml_formation.yaml", "r") as form:
+        with open(os.environ['FOOTBALL_HOME'] + "//formations_config//test_yaml_formation.yaml", "r") as form:
             formations.update(yaml.safe_load(form))
         for formation in formation_amounts:
             if formation_amounts[formation] > max_amount or \
@@ -287,7 +304,8 @@ class LeagueTable:
         cols = set_column_sequence(stats, ["position", "team name", "team id", "played", "wins", "draws", "losses",
                                            "win%", "for",
                                            "against", "points difference"])
-        del cols['']
+        if '' in cols.columns:
+            del cols['']
         with open(self._csv_file, "w") as file:
             file.write(cols.to_csv())
 
