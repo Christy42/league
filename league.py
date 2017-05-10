@@ -4,7 +4,7 @@ import pandas
 import os
 from shutil import copyfile
 from random import randint
-from league_structure import match_training_all
+import league_structure
 
 from american_football import game
 
@@ -126,7 +126,7 @@ class LeagueTable:
             result_1 = [games[g][1], result[1]]
             scores.append((result_0, result_1))
 
-            match_training_all(season_no, games[g], league, plays)
+            league_structure.match_training_all(season_no, games[g], league, plays)
         # Amalgamate route data and formation data into per player, so create a dict with player_ids as keys,
         # accumulate the formations and routes run by going through the data and get it out for the match training
         # Need to actually play the above games

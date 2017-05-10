@@ -486,10 +486,10 @@ def match_training_all(season_no, games, league, plays):
                 players = yaml.safe_load(team_file)["player"]
             for player in players:
                 if player in players_train:
-                    position = league.find_position(player, players_train[player]["formation"],
-                                                    os.environ['FOOTBALL_HOME'] + "//matches//formations//" +
-                                                    str(season_no) + "//" + str(league) + "//" + str(games[0]) +
-                                                    str(games[1]) + str(games[i]) + ".yaml")
+                    position = LeagueTable.find_position(player, players_train[player]["formation"],
+                                                         os.environ['FOOTBALL_HOME'] + "//matches//formations//" +
+                                                         str(season_no) + "//" + str(league) + "//" + str(games[0]) +
+                                                         str(games[1]) + str(games[i]) + ".yaml")
                     match_training.match_training(
                         os.environ['FOOTBALL_HOME'] + "//players//players//" + player + ".yaml",
                         players_train[player]["routes"], players_train[player]["formation"], position)
