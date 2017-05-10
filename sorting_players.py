@@ -7,6 +7,7 @@ from training_modules import aging, training
 
 def train_players():
     for file in os.listdir(os.environ['FOOTBALL_HOME'] + "//players//training"):
+        print(file)
         with open(os.environ['FOOTBALL_HOME'] + "//players//training//" + file, "r") as train_file:
             training_mod = yaml.safe_load(train_file)
         focus = training_mod["focus"]
