@@ -1,6 +1,7 @@
 import os
 import yaml
 import league_structure
+import sorting_players
 
 
 def display_team(team_name):
@@ -360,4 +361,13 @@ def amend_team_order(team_name):
 
 def play_week(week, season_no):
     league_structure.play_week(week + 1, str(season_no))
-play_week(0, 0)
+week = 0
+season_no = 0
+play_week(1, 0)
+# sorting_players.train_players()
+# with open(os.environ['FOOTBALL_HOME'] + "//leagues//" + str(season_no) + "//cup_fixtures.yaml") as teams:
+#     teams_left = yaml.safe_load(teams)
+# print("hi")
+# if len(teams_left) >= 2 ** (10 - week):
+#     league_structure.play_cup_fixtures(str(season_no))
+#     print("week {} cup matches played {}" .format(week + 1, int(time.time() - t)))
