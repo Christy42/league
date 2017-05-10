@@ -91,10 +91,13 @@ class LeagueTable:
                 if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no)):
                     os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no))
                     os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no))
+                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + str(season_no))
                 if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) +
                                      "//" + str(league)):
                     os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) + "//" + str(league))
                     os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no) + "//" +
+                             str(league))
+                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + str(season_no) + "//" +
                              str(league))
                 if not os.path.isfile(os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
                                       str(season_no) + "//" + str(league) + "//" + str(games[g][0]) +
@@ -113,7 +116,7 @@ class LeagueTable:
                 orders[i] = os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) + \
                     "//" + str(league) + "//" + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) + ".yaml"
             comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
-                str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + ".yaml"
+                str(season_no) + "//" + str(league) + "//" + str(games[g][0]) + str(games[g][1]) + ".yaml"
             stats_file = os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
                 str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + ".yaml"
             match = game.Game(player_folder + "//players", orders, formation, name, comm_file, stats_file)
