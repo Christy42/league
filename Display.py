@@ -2,6 +2,9 @@ import os
 import yaml
 import league_structure
 import sorting_players
+import time
+
+from create_team import update_draft_picks
 
 
 def display_team(team_name):
@@ -351,7 +354,7 @@ def amend_team_order(team_name):
                             formation_amount[down] = int(formation_amount[down]) + \
                                 int(play_amounts[orders_to_change][play][down])
                     # if str(formation_amount) == str(new_amounts[formation_change]):
-                    #     break
+                    # break
                 # write plays
                 orders["special"] = special
                 orders[orders_to_change] = play_amounts[orders_to_change]
@@ -361,13 +364,15 @@ def amend_team_order(team_name):
 
 def play_week(week, season_no):
     league_structure.play_week(week + 1, str(season_no))
-week = 0
+week = 3
 season_no = 0
-play_week(1, 0)
-# sorting_players.train_players()
-# with open(os.environ['FOOTBALL_HOME'] + "//leagues//" + str(season_no) + "//cup_fixtures.yaml") as teams:
-#     teams_left = yaml.safe_load(teams)
-# print("hi")
-# if len(teams_left) >= 2 ** (10 - week):
-#     league_structure.play_cup_fixtures(str(season_no))
-#     print("week {} cup matches played {}" .format(week + 1, int(time.time() - t)))
+play_week(week, 0)
+sorting_players.train_players()
+with open(os.environ['FOOTBALL_HOME'] + "//leagues//" + str(season_no) + "//cup_fixtures.yaml") as teams:
+   teams_left = yaml.safe_load(teams)
+print("hi")
+t = time.time()
+if len(teams_left) >= 2 ** (10 - week):
+    league_structure.play_cup_fixtures(str(season_no), os.environ['FOOTBALL_HOME'] + "//players//players")
+    print("week {} cup matches played {}" .format(week + 1, int(time.time() - t)))
+sorting_players.new_players(week)

@@ -359,7 +359,7 @@ def play_cup_fixtures(season_number, player_folder):
             result = [1, 0]
         else:
             for i in range(2):
-                with open(team_folder + "//teams//" + fixture[i] + ".yaml") as team_file:
+                with open(team_folder + "//" + fixture[i] + ".yaml") as team_file:
                     name[i] = yaml.safe_load(team_file)["team name"]
                 if not os.path.isfile(os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
                                       str(season_number) + 'Cup//' + str(fixture[0]) +

@@ -80,7 +80,7 @@ class LeagueTable:
             with open(os.environ['FOOTBALL_HOME'] + "//plays_config//defense_plays//" + play_file, "r") as plays_file:
                 plays.update(yaml.safe_load(plays_file))
         for g in games:
-            print(g)
+            print(games[g])
             # Looking for player files, order files, formation files, team names
             name = [0, 0]
             formation = [0, 0]
@@ -110,7 +110,14 @@ class LeagueTable:
                              os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) +
                              "//" + str(league) + "//" + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) +
                              ".yaml")
-
+                if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
+                str(season_no)):
+                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
+                str(season_no))
+                if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
+                  str(season_no) + "//" + str(league)):
+                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
+                  str(season_no) + "//" + str(league))
                 formation[i] = os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no) + \
                     "//" + str(league) + "//" + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) + ".yaml"
                 orders[i] = os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) + \
@@ -118,7 +125,7 @@ class LeagueTable:
             comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
                 str(season_no) + "//" + str(league) + "//" + str(games[g][0]) + str(games[g][1]) + ".yaml"
             stats_file = os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
-                str(season_no) + str(league) + str(games[g][0]) + str(games[g][1]) + ".yaml"
+                str(season_no) + "//" + str(league) + "//" + str(games[g][0]) + str(games[g][1]) + ".yaml"
             match = game.Game(player_folder + "//players", orders, formation, name, comm_file, stats_file)
             team_stats_folder = os.environ['FOOTBALL_HOME'] + "//teams//stats"
             player_stats_folder = os.environ['FOOTBALL_HOME'] + "//players//stats"

@@ -1,6 +1,6 @@
 import os
 import yaml
-from create_team import add_player
+from create_team import add_player, update_draft_picks
 
 from training_modules import aging, training
 
@@ -20,13 +20,16 @@ def new_players(week):
     for team in os.listdir(os.environ['FOOTBALL_HOME'] + "//teams//teams"):
         with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + team) as team_file:
             draft = yaml.safe_load(team_file)['draft picks']
+        if type(draft) != list:
+            draft = [draft]
         week_draft = [draft[i] for i in range(len(draft)) if str(draft[i]) == str(week)]
-        with open(os.environ['FOOTBALL_HOME'] + "//teams//scouting//scouts-" + team.replace(".yaml", ""), "r") \
+        with open(os.environ['FOOTBALL_HOME'] + "//teams//scouting//scouts-" + team, "r") \
                 as scout_file:
             scouts = yaml.safe_load(scout_file)
         for _ in range(len(week_draft)):
             add_player(team.replace(".yaml", ""), attrib=scouts["attrib"], ideal_height=scouts["ideal_height"],
                        ideal_weight=scouts["ideal_weight"], week=week, maximum=70)
+    update_draft_picks(week)
 
 
 def check_position(player_stats):

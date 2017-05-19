@@ -123,12 +123,16 @@ def create_player(nationality, team, team_id, week, attrib, ideal_weight, ideal_
     player["guarantee"] = 0
     player["age"] = 16 + randint(0, 3)
     height = [generate_height(player["age"]), generate_height(player["age"])]
-    if abs(height[0] - ideal_height) < abs(height[1] - ideal_height) or ideal_height < 0:
+    if ideal_weight == '':
+        ideal_weight = -1
+    if ideal_height == '':
+        ideal_height = -1
+    if abs(int(height[0]) - int(ideal_height)) < abs(int(height[1]) - int(ideal_height)) or int(ideal_height) < 0:
         player["height"] = height[0]
     else:
         player["height"] = height[1]
     weight = [generate_weight(player["height"]), generate_weight(player["height"])]
-    if abs(weight[0] - ideal_weight) < abs(weight[1] - ideal_weight) or ideal_weight:
+    if abs(int(weight[0]) - int(ideal_weight)) < abs(int(weight[1]) - int(ideal_weight)) or int(ideal_weight) < 0:
         player["weight"] = weight[0]
     else:
         player["weight"] = weight[1]
@@ -187,13 +191,15 @@ def name_player(nationality):
 
 
 def add_player(team_id, maximum, week, attrib, ideal_height, ideal_weight):
-    team_folder = os.environ['FOOTBALL_HOME'] + "//teams"
+    team_folder = os.environ['FOOTBALL_HOME'] + "//teams//teams"
     with open(team_folder + "//" + team_id + ".yaml", "r") as team_file:
         team = yaml.safe_load(team_file)
-    if team["player"] < maximum:
+    if len(team["player"]) < maximum:
         team_name = team["team name"]
-        team["player"].append(create_player(team["nationality"], team_name, team_id, attrib=attrib, week=week,
-                                            ideal_height=ideal_height, ideal_weight=ideal_weight))
+        player = create_player(team["nationality"], team_name, team_id, attrib=attrib, week=week,
+                               ideal_height=ideal_height, ideal_weight=ideal_weight)
+
+        team["player"].update(player)
         team["salary"] += 1000
         with open(team_folder + "//" + team_id + ".yaml", "w") as team_file:
             yaml.safe_dump(team, team_file)
@@ -392,10 +398,13 @@ def make_team(name, nationality, season_number, tier_adjust=0):
 def update_draft_picks(week):
     team_folder = os.environ['FOOTBALL_HOME'] + "//teams"
     for team in os.listdir(team_folder + "//teams"):
-        with open(team_folder + "//teams//" + team + ".yaml", "r") as team_file:
+        with open(team_folder + "//teams//" + team, "r") as team_file:
             team_stuff = yaml.safe_load(team_file)
-        team_stuff["draft picks"] = draft_pick_single_team(team_stuff["draft picks"], week)
-        with open(team_folder + "//teams//" + team + ".yaml", "r") as team_file:
+        draft_picks = team_stuff["draft picks"]
+        if type(draft_picks) != list:
+            draft_picks = [draft_picks]
+        team_stuff["draft picks"] = draft_pick_single_team(draft_picks, week)
+        with open(team_folder + "//teams//" + team, "w") as team_file:
             yaml.safe_dump(team_stuff, team_file)
 
 
@@ -403,4 +412,4 @@ def draft_pick_single_team(draft_picks, week):
     while week in draft_picks:
         draft_picks.remove(week)
     draft_picks.append(week)
-    return week
+    return draft_picks
