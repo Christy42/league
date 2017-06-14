@@ -364,7 +364,7 @@ def amend_team_order(team_name):
 
 def play_week(week, season_no):
     league_structure.play_week(week + 1, str(season_no))
-week = 6
+week = 7
 season_no = 0
 play_week(week, 0)
 sorting_players.train_players()

@@ -237,7 +237,8 @@ class LeagueTable:
                 (int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "for"]) -
                  int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "against"]))
         # TODO: Sort the values
-        stats.sort(["win%", "points difference", "for", "team id"], ascending=[False, False, False, True])
+        stats = stats.sort_values(by=["win%", "points difference", "for", "team id"],
+                                  ascending=[False, False, False, True])
         cols = set_column_sequence(stats, ["position", "team name", "team id", "played", "wins", "draws", "losses",
                                            "win%", "for",
                                            "against", "points difference"])
