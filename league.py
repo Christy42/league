@@ -110,13 +110,11 @@ class LeagueTable:
                              os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) +
                              "//" + str(league) + "//" + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) +
                              ".yaml")
-                if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
-                str(season_no)):
-                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
-                str(season_no))
-                if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
+                if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + str(season_no)):
+                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + str(season_no))
+                if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" +
                   str(season_no) + "//" + str(league)):
-                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
+                    os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" +
                   str(season_no) + "//" + str(league))
                 formation[i] = os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no) + \
                     "//" + str(league) + "//" + str(games[g][0]) + str(games[g][1]) + str(games[g][i]) + ".yaml"
@@ -239,6 +237,7 @@ class LeagueTable:
                 (int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "for"]) -
                  int(stats.loc[int(stats.loc[stats["team id"] == result_1[0]]["position"]) - 1, "against"]))
         # TODO: Sort the values
+        stats.sort(["win%", "points difference", "for", "team id"], ascending=[False, False, False, True])
         cols = set_column_sequence(stats, ["position", "team name", "team id", "played", "wins", "draws", "losses",
                                            "win%", "for",
                                            "against", "points difference"])

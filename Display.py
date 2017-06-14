@@ -364,12 +364,12 @@ def amend_team_order(team_name):
 
 def play_week(week, season_no):
     league_structure.play_week(week + 1, str(season_no))
-week = 3
+week = 6
 season_no = 0
 play_week(week, 0)
 sorting_players.train_players()
 with open(os.environ['FOOTBALL_HOME'] + "//leagues//" + str(season_no) + "//cup_fixtures.yaml") as teams:
-   teams_left = yaml.safe_load(teams)
+    teams_left = yaml.safe_load(teams)
 print("hi")
 t = time.time()
 if len(teams_left) >= 2 ** (10 - week):

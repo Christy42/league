@@ -16,6 +16,7 @@ import yaml
 import os
 import csv
 import pandas
+import time
 
 from shutil import copyfile
 from random import randint
@@ -273,7 +274,7 @@ def run_play_offs(team_list, season_number):
             comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
                 str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) + str(team_list[2 * play_off + 1]) + \
                 ".txt"
-            match = game.Game(player_folder, orders, formation, name, comm_file, "cup")
+            match = game.Game(player_folder, orders, formation, name, comm_file, cup=True)
             match.play_game()
             result = match.score
             if result[0] > result[1]:
@@ -349,7 +350,11 @@ def play_cup_fixtures(season_number, player_folder):
         os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_number) + "//" + "CUP")
         os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + str(season_number) + "//" + "CUP")
         os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_number) + "//" + "CUP")
+        os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + str(season_number) + "//" + "CUP")
+
     for fixture in fixtures:
+        start = time.time()
+        print(time.time())
         name = [0, 0]
         formation = [0, 0]
         orders = ["", ""]
@@ -364,11 +369,11 @@ def play_cup_fixtures(season_number, player_folder):
                 if not os.path.isfile(os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
                                       str(season_number) + 'Cup//' + str(fixture[0]) +
                                       str(fixture[1]) + str(fixture[i]) + ".yaml"):
-                    copyfile(team_folder + "//orders//" + str(fixture[i]) + "-formation.yaml",
+                    copyfile(os.environ['FOOTBALL_HOME'] + "//teams//orders//" + str(fixture[i]) + "-formation.yaml",
                              os.environ['FOOTBALL_HOME'] + "//matches//formations//" +
                              str(season_number) + '//Cup//' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) +
                              ".yaml")
-                    copyfile(team_folder + "//orders//" + str(fixture[i]) + "-orders.yaml",
+                    copyfile(os.environ['FOOTBALL_HOME'] + "//teams//orders//" + str(fixture[i]) + "-orders.yaml",
                              os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
                              str(season_number) + '//Cup//' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) +
                              ".yaml")
@@ -379,13 +384,16 @@ def play_cup_fixtures(season_number, player_folder):
                     str(season_number) + '//Cup//' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) + ".yaml"
             comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
                 str(season_number) + '//Cup//' + str(fixture[0]) + str(fixture[1]) + ".txt"
-            match = game.Game(player_folder + "//players", orders, formation, name, comm_file, "cup")
+            stats_file = os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
+                str(season_number) + "//Cup//" + str(fixture[0]) + str(fixture[1]) + ".yaml"
+            match = game.Game(player_folder, orders, formation, name, comm_file, stats_file, cup=True)
             team_stats_folder = os.environ['FOOTBALL_HOME'] + "//teams//stats"
             player_stats_folder = os.environ['FOOTBALL_HOME'] + "//players//stats"
             match.play_game(season_number, team_stats_folder, player_stats_folder, [str(fixture[0]), str(fixture[1])])
             result = match.score
 
         winner = int(result[1] > result[0])
+        print(time.time() - start)
         print("winner")
         print("{} vs {}" .format(fixture[0], fixture[1]))
         print(winner)
@@ -395,6 +403,23 @@ def play_cup_fixtures(season_number, player_folder):
         yaml.safe_dump(winners, file)
     if len(fixtures) > 1:
         create_cup_fixtures(season_number)
+    else:
+        give_trophy(winners, "cup", season_number)
+
+
+def give_trophy(winner, style, season):
+    with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//Team_" + str(winner[0]), "r") as team_file:
+        team_stats = yaml.safe_load(team_file)
+    team_stats[style].append(season)
+
+
+def give_league_trophies(league_folder, season):
+    for directory in os.walk(league_folder):
+        for league in os.walk(league_folder + "//" + directory):
+            with open(league_folder + "//" + directory + "//" + "//" + league + "//table.csv") as table_file:
+                file = pandas.read_csv(table_file)
+            winner = file["team id"][0]
+            give_trophy(winner, league, season)
 
 
 def end_of_season(salary_cap, minimum, season_number):
@@ -597,7 +622,7 @@ def work_out_franchise_cost():
                        "TE": [0, 0], "DL": [0, 0], "DE": [0, 0], "LB": [0, 0], "MLB": [0, 0], "CB": [0, 0],
                        "SF": [0, 0], "K": [0, 0], "GNR": [0, 0], "RET": [0, 0]}
     final_totals = {"QB": 0, "FB": 0, "RB": 0, "OL": 0, "OC": 0, "WR": 0, "TE": 0, "DL": 0, "DE": 0, "LB": 0, "MLB": 0,
-                     "CB": 0,  "SF": 0,  "K": 0,  "GNR": 0,  "RET": 0, }
+                    "CB": 0,  "SF": 0,  "K": 0,  "GNR": 0,  "RET": 0, }
     for player in os.listdir(os.environ['FOOTBALL_HOME'] + "//players//players"):
         # TODO: Work out who is in which position and add them in
         pass
