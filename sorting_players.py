@@ -36,7 +36,7 @@ def check_position(player_stats):
     return ""
 
 
-def check_players_wages():
+def update_players_wages():
     for player in os.listdir(os.environ['FOOTBALL_HOME'] + "players//players"):
         with open(os.environ['FOOTBALL_HOME'] + "players//players//" + player) as player_file:
             player_stats = yaml.safe_load(player_file)
@@ -44,7 +44,7 @@ def check_players_wages():
             pos = check_position(player_stats)
             if pos != "":
                 # TODO: Change players position
-                # TODO: Create bid file for player
+                # TODO: Check Wages
                 pass
 
 

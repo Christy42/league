@@ -408,18 +408,24 @@ def play_cup_fixtures(season_number, player_folder):
 
 
 def give_trophy(winner, style, season):
-    with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//Team_" + str(winner[0]), "r") as team_file:
+    with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + str(winner[1]) + ".yaml", "r") as team_file:
         team_stats = yaml.safe_load(team_file)
-    team_stats[style].append(season)
+    if style not in team_stats["trophies"]:
+        team_stats["trophies"][style] = []
+    team_stats["trophies"][style].append(season)
+    with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + str(winner[1]) + ".yaml", "w") as team_file:
+        yaml.safe_dump(team_stats, team_file)
 
 
 def give_league_trophies(league_folder, season):
     for directory in os.walk(league_folder):
-        for league in os.walk(league_folder + "//" + directory):
-            with open(league_folder + "//" + directory + "//" + "//" + league + "//table.csv") as table_file:
-                file = pandas.read_csv(table_file)
-            winner = file["team id"][0]
-            give_trophy(winner, league, season)
+        if directory[2] == []:
+            for league in os.walk(directory[0]):
+                if league[1] == []:
+                    with open(league[0] + "//table.csv") as table_file:
+                        file = pandas.read_csv(table_file)
+                    winner = [league[0].split('\\')[len(league[0].split('\\')) - 1], file["team id"][0]]
+                    give_trophy(winner, winner[0], season)
 
 
 def end_of_season(salary_cap, minimum, season_number):
@@ -427,6 +433,7 @@ def end_of_season(salary_cap, minimum, season_number):
 
     # TODO: Do promotion stuff
     # Retire players/announce retirements Done
+    # Increase salary?
     age_players()
     print("aged players")
     # Change contract details Done
@@ -579,6 +586,7 @@ def check_salary_cap(salary_cap):
             with open(player_folder + "//players//" + player + ".yaml") as player_file:
                 salaries.update({player: yaml.safe_load(player_file)["contract_value"]})
         salary = sum(list(salaries.values()))
+        print(salary)
         while salary > salary_cap:
 
             fired = randint(0, len(players))

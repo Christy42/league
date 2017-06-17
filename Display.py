@@ -364,7 +364,7 @@ def amend_team_order(team_name):
 
 def play_week(week, season_no):
     league_structure.play_week(week + 1, str(season_no))
-week = 7
+week = 10
 season_no = 0
 play_week(week, 0)
 sorting_players.train_players()
@@ -376,3 +376,5 @@ if len(teams_left) >= 2 ** (10 - week):
     league_structure.play_cup_fixtures(str(season_no), os.environ['FOOTBALL_HOME'] + "//players//players")
     print("week {} cup matches played {}" .format(week + 1, int(time.time() - t)))
 sorting_players.new_players(week)
+if week == 10:
+    league_structure.give_league_trophies(os.environ['FOOTBALL_HOME'] + "//leagues//" + str(season_no), season_no)

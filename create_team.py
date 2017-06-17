@@ -18,7 +18,7 @@ def create_team(nationality, league_name):
     to_write["team name"] = team_name
     to_write["draft picks"] = list(range(1, 12))
     to_write["salary"] = 22000
-    to_write["trophies"] = {"cup": [0]}
+    to_write["trophies"] = {"cup": []}
     scout_base = {"ideal_height": -1, "ideal_weight": -1, "attrib": []}
     with open(os.environ['FOOTBALL_HOME'] + "//teams//scouting//scouts-" + team_name + ".yaml", "w") as scout_file:
         yaml.safe_dump(scout_base, scout_file)
