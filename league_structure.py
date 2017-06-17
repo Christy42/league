@@ -16,6 +16,7 @@ import yaml
 import os
 import csv
 import pandas
+import time
 
 from shutil import copyfile
 from random import randint
@@ -23,6 +24,8 @@ from american_football import game
 
 from create_team import create_team, remove_player, ensure_team_has_minimum
 from league import LeagueTable
+
+from training_modules import match_training
 
 
 def create_tier_from_lists(dict_of_teams):
@@ -88,7 +91,7 @@ def create_tier(tier):
         team = {}
         country = ["Ireland", "United Kingdom", "United States of America", "Canada", "Australia"]
         for _ in range(12):
-            t = create_team(country[randint(0, 4)], str(tier) + " " + str(i))
+            t = create_team(country[randint(0, 4)], league_name)
             team.update({t: t})
         if not os.path.exists(base_name + "//" + str(tier) + "//" + league_name):
             os.makedirs(base_name + "//" + str(tier) + "//" + league_name)
@@ -144,7 +147,6 @@ def work_out_promotions(season_number):
             play_offs_down[str(tier)] = {}
             tier_max = tier
             for league in os.listdir(league_folder + "//" + str(tier)):
-                print("hihg")
                 leagues[str(tier)][str(league)] = []
                 play_offs_down[str(tier)][str(league)] = []
                 with open(league_folder + "//" + str(tier) + "//" + league + "//table.csv") as table_file:
@@ -272,7 +274,7 @@ def run_play_offs(team_list, season_number):
             comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
                 str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) + str(team_list[2 * play_off + 1]) + \
                 ".txt"
-            match = game.Game([player_folder], orders, formation, name, comm_file, "cup")
+            match = game.Game(player_folder, orders, formation, name, comm_file, cup=True)
             match.play_game()
             result = match.score
             if result[0] > result[1]:
@@ -344,49 +346,80 @@ def play_cup_fixtures(season_number, player_folder):
         fixtures = yaml.safe_load(round_file)
 
     winners = [teams[0] + 1]
+    if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_number) + "//" + "CUP"):
+        os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_number) + "//" + "CUP")
+        os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + str(season_number) + "//" + "CUP")
+        os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_number) + "//" + "CUP")
+        os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + str(season_number) + "//" + "CUP")
+
     for fixture in fixtures:
+        start = time.time()
+        print(time.time())
         name = [0, 0]
         formation = [0, 0]
         orders = ["", ""]
         if fixture[0] == "BYE":
-            winner = 1
+            result = [0, 1]
         elif fixture[1] == "BYE":
-            winner = 0
+            result = [1, 0]
         else:
             for i in range(2):
-                with open(team_folder + "//teams//" + fixture[i] + ".yaml") as team_file:
+                with open(team_folder + "//" + fixture[i] + ".yaml") as team_file:
                     name[i] = yaml.safe_load(team_file)["team name"]
                 if not os.path.isfile(os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
-                                      str(season_number) + 'Cup' + str(fixture[0]) +
+                                      str(season_number) + 'Cup//' + str(fixture[0]) +
                                       str(fixture[1]) + str(fixture[i]) + ".yaml"):
-                    copyfile(team_folder + "//orders//" + str(fixture[i]) + "-formation.yaml",
+                    copyfile(os.environ['FOOTBALL_HOME'] + "//teams//orders//" + str(fixture[i]) + "-formation.yaml",
                              os.environ['FOOTBALL_HOME'] + "//matches//formations//" +
-                             str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) +
+                             str(season_number) + '//Cup//' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) +
                              ".yaml")
-                    copyfile(team_folder + "//orders//" + str(fixture[i]) + "-orders.yaml",
+                    copyfile(os.environ['FOOTBALL_HOME'] + "//teams//orders//" + str(fixture[i]) + "-orders.yaml",
                              os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
-                             str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) +
+                             str(season_number) + '//Cup//' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) +
                              ".yaml")
 
                 formation[i] = os.environ['FOOTBALL_HOME'] + "//matches//formations//" + \
-                    str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) + ".yaml"
+                    str(season_number) + '//Cup//' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) + ".yaml"
                 orders[i] = os.environ['FOOTBALL_HOME'] + "//matches//orders//" + \
-                    str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) + ".yaml"
+                    str(season_number) + '//Cup//' + str(fixture[0]) + str(fixture[1]) + str(fixture[i]) + ".yaml"
             comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
-                str(season_number) + 'Cup' + str(fixture[0]) + str(fixture[1]) + ".txt"
-            match = game.Game([player_folder + "//players"], orders, formation, name, comm_file, "cup")
-            match.play_game()
+                str(season_number) + '//Cup//' + str(fixture[0]) + str(fixture[1]) + ".txt"
+            stats_file = os.environ['FOOTBALL_HOME'] + "//matches//stats//" + \
+                str(season_number) + "//Cup//" + str(fixture[0]) + str(fixture[1]) + ".yaml"
+            match = game.Game(player_folder, orders, formation, name, comm_file, stats_file, cup=True)
+            team_stats_folder = os.environ['FOOTBALL_HOME'] + "//teams//stats"
+            player_stats_folder = os.environ['FOOTBALL_HOME'] + "//players//stats"
+            match.play_game(season_number, team_stats_folder, player_stats_folder, [str(fixture[0]), str(fixture[1])])
             result = match.score
 
-        if result[1] > result[0]:
-           winner = 1
-        else:
-           winner = 0
+        winner = int(result[1] > result[0])
+        print(time.time() - start)
+        print("winner")
+        print("{} vs {}" .format(fixture[0], fixture[1]))
+        print(winner)
         winners.append(fixture[winner])
+
     with open(league_folder + "//cup_fixtures.yaml", "w") as file:
         yaml.safe_dump(winners, file)
     if len(fixtures) > 1:
         create_cup_fixtures(season_number)
+    else:
+        give_trophy(winners, "cup", season_number)
+
+
+def give_trophy(winner, style, season):
+    with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//Team_" + str(winner[0]), "r") as team_file:
+        team_stats = yaml.safe_load(team_file)
+    team_stats[style].append(season)
+
+
+def give_league_trophies(league_folder, season):
+    for directory in os.walk(league_folder):
+        for league in os.walk(league_folder + "//" + directory):
+            with open(league_folder + "//" + directory + "//" + "//" + league + "//table.csv") as table_file:
+                file = pandas.read_csv(table_file)
+            winner = file["team id"][0]
+            give_trophy(winner, league, season)
 
 
 def end_of_season(salary_cap, minimum, season_number):
@@ -415,6 +448,76 @@ def end_of_season(salary_cap, minimum, season_number):
     ensure_team_has_minimum(minimum)
     # ensure teams are not going over the maximum salary cap Done
     # ensure each team has minimum number of players by any means needed Done
+
+
+def match_training_all(season_no, games, league, plays):
+    for j in range(2):
+        formation_amounts = {}
+        route_amounts = {}
+        with open(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_no) + "//" + str(league) +
+                  "//" + str(games[0]) + str(games[1]) + str(games[j]) + ".yaml", "r") as order_file:
+            order = yaml.safe_load(order_file)
+        with open(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_no) + "//" + str(league) +
+                  "//" + str(games[0]) + str(games[1]) + str(games[j]) + ".yaml", "r") as order_file:
+            formation_stats = yaml.safe_load(order_file)
+        for play in order["defense"]:
+            if play != "kick return":
+                if plays[play]["formation"] in list(formation_amounts.keys()):
+                    formation_amounts[plays[play]["formation"]] += sum(order["defense"][play].values()) / \
+                                                                       len(order["defense"][play].values())
+                else:
+                    formation_amounts[plays[play]["formation"]] = sum(order["defense"][play].values()) / \
+                                                                          len(order["defense"][play].values())
+
+        for play in order["offense"]:
+            if sum(order["offense"][play].values()) > 0 and play not in ["kick off", "punting", "kicking"]:
+                cut = 2 + (play[2] == " ")
+                cut_name = play[cut:]
+                if plays[cut_name]["formation"] in list(formation_amounts.keys()):
+                    formation_amounts[plays[cut_name]["formation"]] += sum(order["offense"][play].values()) / 4
+                else:
+                    formation_amounts[plays[cut_name]["formation"]] = sum(order["offense"][play].values())
+                for i in range(len(plays[cut_name]["assignments"])):
+                    if "BLOCK" not in plays[cut_name]["assignments"][i].upper() and "RUN" not in \
+                      plays[cut_name]["assignments"][i].upper():
+                        if plays[cut_name]["formation"] not in list(route_amounts.keys()):
+                            route_amounts[plays[cut_name]["formation"]] = {}
+                        if i not in list(route_amounts[plays[cut_name]["formation"]].keys()):
+                            route_amounts[plays[cut_name]["formation"]][i] = {}
+                        if plays[cut_name]["assignments"][i] not in \
+                            list(route_amounts[plays[cut_name]["formation"]][i].keys()):
+                            route_amounts[plays[cut_name]["formation"]][i][plays[cut_name]["assignments"][i]] = 0
+                        route_amounts[plays[cut_name]["formation"]][i][plays[cut_name]["assignments"][i]] += \
+                            sum(order["offense"][play].values()) / 4
+        players_train = {}
+        for formation in formation_amounts:
+            for i in range(11):
+                player = formation_stats[formation][i]
+                if player not in players_train.keys():
+                    players_train[player] = {}
+                    players_train[player]["formation"] = {}
+                    players_train[player]["routes"] = {}
+                if formation not in players_train[player].keys():
+                    players_train[player]["formation"][formation] = 0
+                players_train[player]["formation"][formation] += formation_amounts[formation]
+                if formation in route_amounts:
+                    if i in route_amounts[formation].keys():
+                        for route in route_amounts[formation][i]:
+                            if route not in players_train[player]["routes"]:
+                                players_train[player]["routes"][route] = 0
+                            players_train[player]["routes"][route] += route_amounts[formation][i][route]
+        for i in range(2):
+            with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + games[i] + ".yaml", "r") as team_file:
+                players = yaml.safe_load(team_file)["player"]
+            for player in players:
+                if player in players_train:
+                    position = LeagueTable.find_position(player, players_train[player]["formation"],
+                                                         os.environ['FOOTBALL_HOME'] + "//matches//formations//" +
+                                                         str(season_no) + "//" + str(league) + "//" + str(games[0]) +
+                                                         str(games[1]) + str(games[i]) + ".yaml")
+                    match_training.match_training(
+                        os.environ['FOOTBALL_HOME'] + "//players//players//" + player + ".yaml",
+                        players_train[player]["routes"], players_train[player]["formation"], position)
 
 
 def age_players():
@@ -479,7 +582,7 @@ def check_salary_cap(salary_cap):
         while salary > salary_cap:
 
             fired = randint(0, len(players))
-            remove_player(players[fired], team_file[:len(team_file) - 5], -1)
+            remove_player(players[fired], team_file[:len(team_file) - 5], -1, True)
             salaries.pop(players[fired])
             salary = sum(list(salaries.values()))
 
@@ -519,7 +622,7 @@ def work_out_franchise_cost():
                        "TE": [0, 0], "DL": [0, 0], "DE": [0, 0], "LB": [0, 0], "MLB": [0, 0], "CB": [0, 0],
                        "SF": [0, 0], "K": [0, 0], "GNR": [0, 0], "RET": [0, 0]}
     final_totals = {"QB": 0, "FB": 0, "RB": 0, "OL": 0, "OC": 0, "WR": 0, "TE": 0, "DL": 0, "DE": 0, "LB": 0, "MLB": 0,
-                     "CB": 0,  "SF": 0,  "K": 0,  "GNR": 0,  "RET": 0, }
+                    "CB": 0,  "SF": 0,  "K": 0,  "GNR": 0,  "RET": 0, }
     for player in os.listdir(os.environ['FOOTBALL_HOME'] + "//players//players"):
         # TODO: Work out who is in which position and add them in
         pass
