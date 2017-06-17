@@ -1,5 +1,7 @@
 import os
 import yaml
+from random import randint
+
 from create_team import add_player, update_draft_picks
 
 from training_modules import aging, training
@@ -32,22 +34,60 @@ def new_players(week):
     update_draft_picks(week)
 
 
-def check_position(player_stats):
+def check_position(player):
     return ""
 
 
 def update_players_wages():
+    # TODO: Need to nail down this exactly.  Maybe have this as what they are asking for.
+    # TODO: Check for contract nearly up or on junior wages.
     for player in os.listdir(os.environ['FOOTBALL_HOME'] + "players//players"):
-        with open(os.environ['FOOTBALL_HOME'] + "players//players//" + player) as player_file:
+        with open(os.environ['FOOTBALL_HOME'] + "players//players//" + player, "r") as player_file:
             player_stats = yaml.safe_load(player_file)
-        if player_stats["contract_value"] == 1000:
-            pos = check_position(player_stats)
-            if pos != "":
-                # TODO: Change players position
-                # TODO: Check Wages
-                pass
+        if player_stats["franchised"]:
+            player_stats["franchised"] = False
+        if player_stats["franchise next season"] is True:
+            pos = check_position(player)
+            player_stats["franchise next season"] = False
+            player_stats["franchised"] = True
+            player_stats["guarantee"] = 1
+            player_stats["years_left"] = 1
+            with open("franchised", "r") as franchise_wages:
+                player_stats["contract_value"] = yaml.safe_load(franchise_wages)[pos]
+        if (player_stats["contract_value"] > 1000 and player_stats["years_left"] > 1) \
+                or player_stats["franchised"] is True:
+            pass
+        else:
+            pos = check_position(player)
+            with open("wages", "r") as wage_file:
+                wages = yaml.safe_load(wage_file)[pos]
+            max_stat = 0
+            second_stat = 0
+            for stat in wages["stats"]:
+                if player_stats[stat] > max_stat:
+                    max_stat = player_stats[stat]
+                    second_stat = max_stat
+                else:
+                    second_stat = max(second_stat, player_stats[stat])
+            if max_stat > 500:
+                player_stats["asking_price"] = max(player_stats["contract_value"], wages[round(max_stat / 10.0, -1)]) + \
+                    randint(-10000, 10000) + second_stat * 10000
+                player_stats["asking_guarantee"] = 0
+        with open(os.environ['FOOTBALL_HOME'] + "players//players//" + player, "w") as player_file:
+            yaml.safe_dump(player_stats, player_file)
 
 
 def check_bid_files():
     # TODO: checks the various bid files and accepts them or not
     pass
+
+
+def franchise_player(player):
+    with open(os.environ['FOOTBALL_HOME'] + "players//players//" + player + ".yaml", "r") as player_file:
+        player_stats = yaml.safe_load(player_file)
+    if player_stats["franchise next season"] is True or player_stats["years_left"] > 1 or player_stats["franchised"]:
+        return False
+    player_stats["franchise next season"] = True
+    with open(os.environ['FOOTBALL_HOME'] + "players//players//" + player + ".yaml", "w") as player_file:
+        yaml.safe_dump(player_stats, player_file)
+    return True
