@@ -35,12 +35,14 @@ def new_players(week):
 
 
 def check_position(player):
+    with open(os.environ['FOOTBALL_HOME'] + "players//players//" + player, "r") as player_file:
+        player_stats = yaml.safe_load(player_file)
+    with open(os.environ['FOOTBALL_HOME'] + "trading//franchise_wages.yaml", "r") as franchise_wages:
+        franchise = yaml.safe_load(franchise_wages)
     return ""
 
 
 def update_players_wages():
-    # TODO: Need to nail down this exactly.  Maybe have this as what they are asking for.
-    # TODO: Check for contract nearly up or on junior wages.
     for player in os.listdir(os.environ['FOOTBALL_HOME'] + "players//players"):
         with open(os.environ['FOOTBALL_HOME'] + "players//players//" + player, "r") as player_file:
             player_stats = yaml.safe_load(player_file)
@@ -52,7 +54,7 @@ def update_players_wages():
             player_stats["franchised"] = True
             player_stats["guarantee"] = 1
             player_stats["years_left"] = 1
-            with open("franchised", "r") as franchise_wages:
+            with open(os.environ['FOOTBALL_HOME'] + "trading//franchise_wages.yaml", "r") as franchise_wages:
                 player_stats["contract_value"] = yaml.safe_load(franchise_wages)[pos]
         if (player_stats["contract_value"] > 1000 and player_stats["years_left"] > 1) \
                 or player_stats["franchised"] is True:
@@ -82,12 +84,22 @@ def check_bid_files():
     pass
 
 
-def franchise_player(player):
-    with open(os.environ['FOOTBALL_HOME'] + "players//players//" + player + ".yaml", "r") as player_file:
+def franchise_player(player, team, franchise_limit):
+    with open(os.environ['FOOTBALL_HOME'] + "//players//players//" + player + ".yaml", "r") as player_file:
         player_stats = yaml.safe_load(player_file)
+    with (os.environ['FOOTBALL_HOME'] + "//team//team//" + team + ".yaml", "r") as team_file:
+        team = yaml.safe_load(team_file)
+    if "franchised" not in team.keys():
+        team["franchised"] = 0
+
+    if team["franchised"] >= franchise_limit or player not in team["player"]:
+        return False
     if player_stats["franchise next season"] is True or player_stats["years_left"] > 1 or player_stats["franchised"]:
         return False
     player_stats["franchise next season"] = True
     with open(os.environ['FOOTBALL_HOME'] + "players//players//" + player + ".yaml", "w") as player_file:
         yaml.safe_dump(player_stats, player_file)
+    team["franchised"] += 1
+    with (os.environ['FOOTBALL_HOME'] + "//team//team//" + team + ".yaml", "w") as team_file:
+        yaml.safe_dump(team, team_file)
     return True

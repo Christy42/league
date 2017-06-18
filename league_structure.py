@@ -281,7 +281,6 @@ def run_play_offs(team_list, season_number):
                 next_round.append(team_list[2 * play_off])
             else:
                 next_round.append(team_list[2 * play_off + 1])
-
     return next_round
 
 
@@ -626,15 +625,19 @@ def sort_entire_league(season_number):
 
 
 def work_out_franchise_cost():
-    positions_total = {"QB": [0, 0], "FB": [0, 0], "RB": [0, 0], "OL": [0, 0], "OC": [0, 0], "WR": [0, 0],
-                       "TE": [0, 0], "DL": [0, 0], "DE": [0, 0], "LB": [0, 0], "MLB": [0, 0], "CB": [0, 0],
-                       "SF": [0, 0], "K": [0, 0], "GNR": [0, 0], "RET": [0, 0]}
-    final_totals = {"QB": 0, "FB": 0, "RB": 0, "OL": 0, "OC": 0, "WR": 0, "TE": 0, "DL": 0, "DE": 0, "LB": 0, "MLB": 0,
-                    "CB": 0,  "SF": 0,  "K": 0,  "GNR": 0,  "RET": 0, }
+    positions_total = {"QB": [], "RB": [], "OL": [], "WR": [], "TE": [], "DL": [], "DE": [], "LB": [], "CB": [],
+                       "SF": [], "K": []}
+    final_totals = {"QB": 0, "RB": 0, "OL": 0, "WR": 0, "TE": 0, "DL": 0, "DE": 0, "LB": 0, "CB": 0,  "SF": 0,  "K": 0}
     for player in os.listdir(os.environ['FOOTBALL_HOME'] + "//players//players"):
         # TODO: Work out who is in which position and add them in
-        pass
+        wages = 1
+        position = "QB"
+        if len(positions_total[position]) < 5:
+            positions_total[position].append(wages)
+        elif wages > min(positions_total[position]):
+            positions_total[position].remove(min(positions_total[position]))
+            positions_total[position].append(wages)
     for position in positions_total:
-        final_totals[position] = positions_total[position][0] / positions_total[position][1]
-
-    # TODO: Put final totals somewhere
+        final_totals[position] = max(sum(positions_total[position]) / max(len(positions_total[position]), 1), 4000000)
+    with open(os.environ['FOOTBALL_HOME'] + "trading//franchise_wages.yaml", "w") as franchise_wages:
+        yaml.safe_dump(final_totals, franchise_wages)
