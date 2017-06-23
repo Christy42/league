@@ -43,6 +43,11 @@ def update_players_wages():
     for player in os.listdir(os.environ['FOOTBALL_HOME'] + "//players//players"):
         with open(os.environ['FOOTBALL_HOME'] + "//players//players//" + player, "r") as player_file:
             player_stats = yaml.safe_load(player_file)
+        with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + player_stats["team"] + ".yaml", "r") as team_file:
+            bot_team = yaml.safe_load(team_file)["bot"]
+        if bot_team and randint(0, 99) != 0:
+            player_stats["years_left"] = 2
+            player_stats["contract_value"] = 1000
         if player_stats["franchised"]:
             player_stats["franchised"] = False
         if player_stats["franchise next season"] is True:

@@ -104,8 +104,6 @@ def add_player_to_free_agency(player_file):
     if player_stats["team"] in team.keys():
         team = team[player_stats["team"]]
     else:
-        if random.randint(0, 99) != 0:
-            return 0
         team = "bot"
     wage_stats = {length: {"wage": wages[0][length][0], "min_wage": wages[0][length][1]} for length in range(3, 7)}
     print_stats = {"team": team, "min_guarantee": wages[1][1], "guarantee": wages[1][0],
@@ -125,7 +123,6 @@ def add_player_to_free_agency(player_file):
                 exp_style = stat
     with open(os.environ['FOOTBALL_HOME'] + "//trading//trades//" + player_file + ".yaml", "w") as trading_file:
         yaml.safe_dump(print_stats, trading_file)
-    return 1
 
 
 def add_free_agency_bid(player, team, wage, length, guarantee):

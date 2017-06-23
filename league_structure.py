@@ -36,10 +36,9 @@ def create_tier_from_lists(dict_of_teams):
     team_folder = os.environ['FOOTBALL_HOME'] + "//teams"
     with open(os.environ['FOOTBALL_HOME'] + "//leagues//season_number.yaml", "r") as file:
         season_number = yaml.safe_load(file)
-    base_name = "leagues//" + str(season_number)
+    base_name = os.environ['FOOTBALL_HOME'] + "//" + "leagues//" + str(season_number)
     if not os.path.exists(base_name):
         os.makedirs(base_name)
-
     for tier in dict_of_teams:
         if not os.path.exists(base_name + "//" + str(tier)):
             os.makedirs(base_name + "//" + str(tier))
@@ -238,14 +237,20 @@ def run_playoffs(league_folder):
         for team in promotions["play_offs_down"][str(promotions["tier_max"])][league]:
             print("T {}" .format(team))
             promotions["leagues"][str(promotions["tier_max"])][league].append(team)
+    print(promotions["leagues"])
     create_tier_from_lists(promotions["leagues"])
 
 
 # TODO: create a function to run the games and add all the needed teams to the correct lists
 def run_play_offs(team_list, season_number):
-    team_folder = os.environ['FOOTBALL_HOME'] + "teams//teams"
-    player_folder = os.environ['FOOTBALL_HOME'] + "players//players"
+    team_folder = os.environ['FOOTBALL_HOME'] + "//teams//"
+    player_folder = os.environ['FOOTBALL_HOME'] + "//players//players"
     next_round = []
+    if not os.path.isdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_number) + "//" + "Play_Off"):
+        os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//orders//" + str(season_number) + "//" + "Play_Off")
+        os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + str(season_number) + "//" + "Play_Off")
+        os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//formations//" + str(season_number) + "//" + "Play_Off")
+        os.mkdir(os.environ['FOOTBALL_HOME'] + "//matches//stats//" + str(season_number) + "//" + "Play_Off")
     for play_off in range(0, int(len(team_list) / 2)):
         name = [0, 0]
         formation = [0, 0]
@@ -254,33 +259,38 @@ def run_play_offs(team_list, season_number):
             with open(team_folder + "//teams//" + team_list[2 * play_off + i] + ".yaml") as team_file:
                 name[i] = yaml.safe_load(team_file)["team name"]
                 if not os.path.isfile(os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
-                                      str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) +
+                                      str(season_number) + '//Play_Off//' + str(team_list[2 * play_off]) +
                                       str(team_list[2 * play_off + 1]) + str(team_list[2 * play_off + i]) + ".yaml"):
                     copyfile(team_folder + "//orders//" + str(team_list[2 * play_off + i]) + "-formation.yaml",
                              os.environ['FOOTBALL_HOME'] + "//matches//formations//" +
-                             str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) +
+                             str(season_number) + '//Play_Off//' + str(team_list[2 * play_off]) +
                              str(team_list[2 * play_off + 1]) + str(team_list[2 * play_off + i]) + ".yaml")
                     copyfile(team_folder + "//orders//" + str(team_list[2 * play_off + i]) + "-orders.yaml",
                              os.environ['FOOTBALL_HOME'] + "//matches//orders//" +
-                             str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) +
+                             str(season_number) + '//Play_Off//' + str(team_list[2 * play_off]) +
                              str(team_list[2 * play_off + 1]) + str(team_list[2 * play_off + i]) + ".yaml")
 
                 formation[i] = os.environ['FOOTBALL_HOME'] + "//matches//formations//" + \
-                    str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) + str(team_list[2 * play_off + 1]) + \
-                    str(team_list[2 * play_off + i]) + ".yaml"
+                    str(season_number) + '//Play_Off//' + str(team_list[2 * play_off]) + \
+                    str(team_list[2 * play_off + 1]) + str(team_list[2 * play_off + i]) + ".yaml"
                 orders[i] = os.environ['FOOTBALL_HOME'] + "//matches//orders//" + \
-                    str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) + str(team_list[2 * play_off + 1]) + \
-                    str(team_list[2 * play_off + i]) + ".yaml"
-            comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + \
-                str(season_number) + 'Play_Off' + str(team_list[2 * play_off]) + str(team_list[2 * play_off + 1]) + \
-                ".txt"
-            match = game.Game(player_folder, orders, formation, name, comm_file, cup=True)
-            match.play_game()
-            result = match.score
-            if result[0] > result[1]:
-                next_round.append(team_list[2 * play_off])
-            else:
-                next_round.append(team_list[2 * play_off + 1])
+                    str(season_number) + '//Play_Off//' + str(team_list[2 * play_off]) + \
+                    str(team_list[2 * play_off + 1]) + str(team_list[2 * play_off + i]) + ".yaml"
+        comm_file = os.environ['FOOTBALL_HOME'] + "//matches//commentary//" + str(season_number) + '//Play_Off//' +\
+            str(team_list[2 * play_off]) + str(team_list[2 * play_off + 1]) + ".txt"
+        stats_file = os.environ['FOOTBALL_HOME'] + "//matches//stats//" + str(season_number) + "//Play_Off//" + \
+            str(team_list[2 * play_off]) + str(team_list[2 * play_off + 1]) + ".yaml"
+        team_stats_folder = os.environ['FOOTBALL_HOME'] + "//teams//stats"
+        player_stats_folder = os.environ['FOOTBALL_HOME'] + "//players//stats"
+
+        match = game.Game(player_folder, orders, formation, name, comm_file, stats_file, cup=True)
+        match.play_game(season_number, team_stats_folder, player_stats_folder,
+                        [str(team_list[2 * play_off]), str(team_list[2 * play_off + 1])])
+        result = match.score
+        if result[0] > result[1]:
+            next_round.append(team_list[2 * play_off])
+        else:
+            next_round.append(team_list[2 * play_off + 1])
     return next_round
 
 
@@ -339,6 +349,13 @@ def shift_bit_length(x):
 def play_cup_fixtures(season_number, player_folder):
     league_folder = os.environ['FOOTBALL_HOME'] + "//leagues//" + str(season_number)
     team_folder = os.environ['FOOTBALL_HOME'] + "//teams//teams"
+    plays = {}
+    for play_file in os.listdir(os.environ['FOOTBALL_HOME'] + "//plays_config//offense_plays"):
+        with open(os.environ['FOOTBALL_HOME'] + "//plays_config//offense_plays//" + play_file, "r") as plays_file:
+            plays.update(yaml.safe_load(plays_file))
+    for play_file in os.listdir(os.environ['FOOTBALL_HOME'] + "//plays_config//defense_plays"):
+        with open(os.environ['FOOTBALL_HOME'] + "//plays_config//defense_plays//" + play_file, "r") as plays_file:
+            plays.update(yaml.safe_load(plays_file))
     with open(league_folder + "//cup_fixtures.yaml", "r") as cup_file:
         teams = yaml.safe_load(cup_file)
     with open(league_folder + "//round_" + str(teams[0]) + ".yaml", "r") as round_file:
@@ -392,6 +409,7 @@ def play_cup_fixtures(season_number, player_folder):
             result = match.score
 
         winner = int(result[1] > result[0])
+        match_training_all(season_number, fixture, "cup", plays)
         print(time.time() - start)
         print("winner")
         print("{} vs {}" .format(fixture[0], fixture[1]))
