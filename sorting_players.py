@@ -93,4 +93,3 @@ def franchise_player(player, team, franchise_limit):
         yaml.safe_dump(team, team_file)
     return True
 
-update_players_wages()

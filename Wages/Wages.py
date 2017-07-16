@@ -5,6 +5,8 @@ import datetime
 
 from math import floor
 
+import create_team
+
 
 def wage_function(position, skill, age, contract_length):
     with open(os.environ['FOOTBALL_HOME'] + "//wages_config//" + "wages.yaml") as wages_file:
@@ -24,33 +26,25 @@ def guaranteed():
 
 
 def decision_matrix(bids, guarantee, min_guarantee, min_wage, wage, factor, base_team, age, contract_length):
-    bids["Minimum"] = {"Guarantee": min_guarantee, "Wages": min_wage, "Length": contract_length}
-    age_factor = min(max((30 - age) / 10.0, 0), 1)
-    for bid in bids:
-        bids["Wages"] = bid["Wages"] * (1 + contract_length * age_factor / 10.0) / \
-                        (1 + bids["Length"] * age_factor / 10.0)
-        bids["Length"] = contract_length
-    bid_value = {team: min(bids[team]["Guarantee"], guarantee) * factor + min(bids[team]["Wages"], wage)
-                 for team in bids}
-    extra_guarantee = {team: bid_value[team] + max(min(guarantee, bids[team]["Guarantee"] - guarantee) *
-                                                   ((factor - 1) / 3 + 1), 0)
-                       for team in bid_value}
-    extra_wages = {team: extra_guarantee[team] + max((bids[team]["Wages"] - wage) * 0.93, 0) for team in bid_value}
-    lower_wages = {team: extra_wages[team] - max(wage - max(bids[team]["Wages"], min_wage) * 0.07, 0) -
-                   max(min_wage - bids[team]["Wages"], 0) * 0.15 for team in bid_value}
-    lower_guarantee = {team: lower_wages[team] - max(guarantee - max(bids[team]["Guarantee"], min_guarantee) *
-                                                     (factor - 0.93), 0) -
-                       max(min_guarantee - bids[team]["Guarantee"], 0) * (factor - 0.85) for team in lower_wages}
+    bids["Minimum"] = {"guarantee": min_guarantee, "wages": min_wage[contract_length], "length": contract_length}
+    extra_guarantee = {team: min(max(bids[team]["guarantee"] - guarantee * factor, 0), 0.3) * wage[3] for team in bids}
+    extra_wages = {team: extra_guarantee[team] + max((bids[team]["wages"] - wage[bids[team]["length"]]), 0)
+                   for team in bids}
+    lower_wages = {team: extra_wages[team] - max(wage[bids[team]["length"]] - bids[team]["wages"], 0)
+                   for team in bids}
+    lower_guarantee = {team: lower_wages[team] - max(guarantee - bids[team]["guarantee"] * factor, 0) * wage[5]
+                       for team in lower_wages}
     home_team = {team: lower_guarantee[team] * (1 + 0.1 * (team == base_team)) * (1 + random.randint(0, 10) / 10.0)
-                 for team in bid_value}
+                 for team in bids}
     best_bid = home_team["Minimum"]
     winner_list = []
     for bid in home_team:
-        if home_team[bid] <= best_bid:
-            if home_team[bid] < best_bid:
+        if home_team[bid] >= best_bid:
+            if home_team[bid] > best_bid:
                 winner_list = []
                 best_bid = home_team[bid]
             winner_list.append(bid)
+    print(winner_list)
     return winner_list[random.randint(0, len(winner_list) - 1)]
 
 
@@ -105,9 +99,10 @@ def add_player_to_free_agency(player_file):
         team = team[player_stats["team"]]
     else:
         team = "bot"
+    factor = random.randint(1, 75) / 100.0 + 1
     wage_stats = {length: {"wage": wages[0][length][0], "min_wage": wages[0][length][1]} for length in range(3, 7)}
-    print_stats = {"team": team, "min_guarantee": wages[1][1], "guarantee": wages[1][0],
-                   "create_time": datetime.datetime.now(), "bids": {}}
+    print_stats = {"team": team, "min_guarantee": wages[1][1], "guarantee": wages[1][0], "factor": factor,
+                   "create_time": datetime.datetime.now(), "bids": {}, "age": player_stats["age"]}
     print_stats.update(wage_stats)
     max_exp = 0
     exp_style = ""
@@ -121,7 +116,7 @@ def add_player_to_free_agency(player_file):
             if exp_style != "":
                 print_stats.pop(exp_style)
                 exp_style = stat
-    with open(os.environ['FOOTBALL_HOME'] + "//trading//trades//" + player_file + ".yaml", "w") as trading_file:
+    with open(os.environ['FOOTBALL_HOME'] + "//trading//trades//" + player_file, "w") as trading_file:
         yaml.safe_dump(print_stats, trading_file)
 
 
@@ -129,6 +124,58 @@ def add_free_agency_bid(player, team, wage, length, guarantee):
     with open(os.environ['FOOTBALL_HOME'] + "//trading//trades//" + player + ".yaml", "r") as trade_file:
         trade = yaml.safe_load(trade_file)
     trade["bids"].update({team: {"wages": wage, "length": length, "guarantee": guarantee}})
+    with open(os.environ['FOOTBALL_HOME'] + "//trading//trades//" + player + ".yaml", "w") as trade_file:
+        yaml.safe_dump(trade, trade_file)
+
+
+def decide_bids(minimum_team, maximum_team, salary_limit):
+    for file in os.listdir(os.environ["FOOTBALL_HOME"] + "//trading//trades"):
+        with open(os.environ['FOOTBALL_HOME'] + "//trading//trades//" + file, "r") as bid_file:
+            bid_decision = yaml.safe_load(bid_file)
+        if 3 in bid_decision.keys():
+            if (datetime.datetime.now() - bid_decision["create_time"]).days < 8:
+                continue
+        wages = {3: bid_decision[3]["wage"], 4: bid_decision[4]["wage"],
+                 5: bid_decision[5]["wage"], 6: bid_decision[6]["wage"]}
+        min_wages = {3: bid_decision[3]["min_wage"], 4: bid_decision[4]["min_wage"],
+                     5: bid_decision[5]["min_wage"], 6: bid_decision[6]["min_wage"]}
+        team_transfer = decision_matrix(bid_decision["bids"], bid_decision["guarantee"], bid_decision["min_guarantee"],
+                                        min_wages, wages,
+                                        bid_decision["factor"], bid_decision["team"], bid_decision["age"], 3)
+        if team_transfer == "Minimum":
+            bid_decision["create_time"] = datetime.datetime.now()
+            bid_decision["bids"] = {}
+            bid_decision[3]["min_wage"] *= (0.75 + random.random() / 2.0)
+            bid_decision[3]["wage"] *= (0.75 + random.random() / 2.0)
+            bid_decision[4]["min_wage"] *= (0.75 + random.random() / 2.0)
+            bid_decision[4]["wage"] *= (0.75 + random.random() / 2.0)
+            bid_decision[5]["min_wage"] *= (0.75 + random.random() / 2.0)
+            bid_decision[5]["wage"] *= (0.75 + random.random() / 2.0)
+            bid_decision[6]["min_wage"] *= (0.75 + random.random() / 2.0)
+            bid_decision[6]["wage"] *= (0.75 + random.random() / 2.0)
+            create_team.remove_player(file[:-5], bid_decision["team"], minimum_team, True)
+            with open(os.environ['FOOTBALL_HOME'] + "//trading//trades//" + file, "w") as bid_file:
+                yaml.safe_dump(bid_decision, bid_file)
+        elif bid_decision["team"] == team_transfer:
+            os.remove(os.environ['FOOTBALL_HOME'] + "//trading//trades//" + file)
+            with open(os.environ['FOOTBALL_HOME'] + "//players//players//" + file, "r") as player_file:
+                player = yaml.safe_load(player_file)
+            player["guarantee"] = bid_decision["bids"][team_transfer]["guarantee"]
+            player["years_left"] = bid_decision["bids"][team_transfer]["length"]
+            player["contract_value"] = bid_decision["bids"][team_transfer]["wages"]
+            with open(os.environ['FOOTBALL_HOME'] + "//players//players//" + file, "w") as player_file:
+                yaml.safe_dump(player, player_file)
+        else:
+            os.remove(os.environ['FOOTBALL_HOME'] + "//trading//trades//" + file)
+            create_team.remove_player(file[:-5], bid_decision["team"], minimum_team, True)
+            create_team.add_player_old(team_transfer, file[:-5], maximum_team, salary_limit)
+            with open(os.environ['FOOTBALL_HOME'] + "//players//players//" + file, "r") as player_file:
+                player = yaml.safe_load(player_file)
+            player["guarantee"] = bid_decision["bids"][team_transfer]["guarantee"]
+            player["years_left"] = bid_decision["bids"][team_transfer]["length"]
+            player["contract_value"] = bid_decision["bids"][team_transfer]["wages"]
+            with open(os.environ['FOOTBALL_HOME'] + "//players//players//" + file, "w") as player_file:
+                yaml.safe_dump(player, player_file)
 
 values = []
 greater30 = 0
@@ -140,4 +187,8 @@ for i in range(1000):
         greater30 += 1
     elif inc < 0.2:
         less20 += 1
+
+# add_free_agency_bid("Player_1096", "Team_46", 6700000, 6, 0.9)
+# add_free_agency_bid("Player_1096", "Team_15", 2100000, 3, 2)
+# decide_bids(10, 80, 130000000)
 

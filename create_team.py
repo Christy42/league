@@ -206,16 +206,16 @@ def add_player(team_id, maximum, week, attrib, ideal_height, ideal_weight):
 
 
 def add_player_old(team_id, player_id, maximum, max_salary_amount):
-    team_folder = os.environ['FOOTBALL_HOME'] + "//teams"
-    player_folder = os.environ['FOOTBALL_HOME'] + "//players"
-    with open(team_folder + "//" + team_id + ".yaml", "r") as team_file:
+    team_folder = os.environ['FOOTBALL_HOME'] + "//teams//teams"
+    player_folder = os.environ['FOOTBALL_HOME'] + "//players//players"
+    with open(team_folder + "//Team_" + team_id + ".yaml", "r") as team_file:
         team = yaml.safe_load(team_file)
     with open(player_folder + "//" + player_id + ".yaml", "r") as player_file:
         player = yaml.safe_load(player_file)
-    if team["player"] < maximum and team["salary"] + player["contract_value"] <= max_salary_amount:
-        team["player"].append(player_id)
+    if len(team["player"]) < maximum and team["salary"] + player["contract_value"] <= max_salary_amount:
+        team["player"].update({player_id: player["name"]})
         team["salary"] += player["contract_value"]
-        with open(team_folder + "//" + team_id + ".yaml", "w") as team_file:
+        with open(team_folder + "//Team_" + team_id + ".yaml", "w") as team_file:
             yaml.safe_dump(team, team_file)
 
         player["team_id"] = team_id
@@ -239,6 +239,14 @@ def ensure_team_has_minimum(minimum):
 
 
 def remove_player(player_id, team_id, minimum, force=False, force_trade=False):
+    """
+    :param player_id:
+    :param team_id:
+    :param minimum:
+    :param force:
+    :param force_trade:
+    :return:
+    """
     team_folder = os.environ['FOOTBALL_HOME'] + "//teams"
     player_folder = os.environ['FOOTBALL_HOME'] + "//players"
     with open(team_folder + "//teams//" + team_id + ".yaml", "r") as team_file:
@@ -264,7 +272,7 @@ def remove_player(player_id, team_id, minimum, force=False, force_trade=False):
                         replaced = True
                     else:
                         counter += 1
-        with open(team_folder + "//orders//" + team_id + "-formation.yaml", "2") as formation_file:
+        with open(team_folder + "//orders//" + team_id + "-formation.yaml", "w") as formation_file:
             yaml.safe_dump(team_formation, formation_file)
         with open(player_folder + "//players//" + player_id + ".yaml", "r") as player_file:
             player = yaml.safe_load(player_file)
@@ -327,15 +335,12 @@ def make_team(name, nationality, season_number, tier_adjust=0):
             bot = yaml.safe_load(team_file)["bot"]
         if bot is False:
             teams.remove(team)
-    print("adksljf")
-    print(teams)
     if len(teams) == 0:
         if tier > 1:
             make_team(name, nationality, season_number, tier_adjust + 1)
         else:
             print("No teams available")
     place = randint(0, len(teams) - 1)
-    print(team_folder + "//teams//" + teams[place] + ".yaml")
     with open(team_folder + "//teams//" + teams[place] + ".yaml", "r") as team_file:
         team_stuff = yaml.safe_load(team_file)
     team_stuff["bot"] = False
