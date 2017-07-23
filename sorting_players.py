@@ -21,6 +21,7 @@ def train_players():
 
 
 def new_players(week):
+    week += 1
     for team in os.listdir(os.environ['FOOTBALL_HOME'] + "//teams//teams"):
         with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + team) as team_file:
             draft = yaml.safe_load(team_file)

@@ -166,8 +166,6 @@ def sort_active_bids(minimum_team, maximum_team, salary_limit):
             create_team.add_player_old(team_win, file[:-5], maximum_team, salary_limit)
             with open(os.environ["FOOTBALL_HOME"] + "//teams//teams//" + current_team + ".yaml", "w") as cur_team_file:
                 yaml.safe_dump(cur_team, cur_team_file)
-            # TODO: Remove player from old team
-            # TODO: Add player to new team
 
 
 # trade_picks([1, 1], [6, 5], 11, 40)
