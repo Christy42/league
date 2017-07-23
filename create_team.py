@@ -416,5 +416,5 @@ def update_draft_picks(week):
 def draft_pick_single_team(draft_picks, week):
     while week in draft_picks:
         draft_picks.remove(week)
-    draft_picks.append(week)
+    draft_picks.append(week + 1)
     return draft_picks

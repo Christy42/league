@@ -420,3 +420,4 @@ display_team("Traujin's Pros")
 # TODO: In week one ensure that the right week is used for drafting players
 # TODO: Ensure kick experience is given and that normal training is done
 # TODO: Check that all positional exp is given
+
