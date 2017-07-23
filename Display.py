@@ -29,7 +29,7 @@ def display_player(player_name):
           " salary: " + str(player["contract_value"]) + "  years left: " + str(player["years_left"]) +
           "  guaranteed: " + str(player["guarantee"]) + "%")
     print("Height: " + str(player["height"]) + "  Weight: " + str(int(round(player["weight"], 0))) +
-          " Team: " + player["team"])
+          " Team: " + player["team"] + " Player id: " + str(player["id"]))
     with open(os.environ['FOOTBALL_HOME'] + "//players//ref//player_stats.yaml") as stat_file:
         attributes = yaml.safe_load(stat_file)
     count = 0
@@ -61,6 +61,16 @@ def display_player(player_name):
     exp_display = input("Do you want to display players positional and route experience? Y for yes.")
     if exp_display == "Y" or exp_display == "y":
         display_player_exp(player, attributes)
+
+
+def display_team_players(team_name):
+    with open(os.environ['FOOTBALL_HOME'] + "//teams//ref//team_id.yaml") as file:
+        result = yaml.safe_load(file)[team_name]
+    with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + result + ".yaml") as team_file:
+        team = yaml.safe_load(team_file)["player"]
+    for player in team:
+        display_player(player)
+        print("")
 
 
 def display_player_exp(player, attributes):
@@ -102,7 +112,7 @@ def amend_player_training(player):
         attributes = yaml.safe_load(stat_file)
     with open(os.environ['FOOTBALL_HOME'] + "//players//training//" + player + ".yaml", "r") as training_file:
         training = yaml.safe_load(training_file)
-    print("focus: " + training["focus"] + "route assignment: " + training["route assignment"] +
+    print("focus: " + training["focus"] + " route assignment: " + training["route assignment"] +
           " weight direction: " + training["weight direction"])
     change = input("Hit Y if you wish to change the training regime for this player?")
     focus = weight_direction = route_assignment = "b"
@@ -121,6 +131,17 @@ def amend_player_training(player):
         training["route_assignment"] = route_assignment
         with open(os.environ['FOOTBALL_HOME'] + "//players//training//" + player + ".yaml", "w") as training_file:
             yaml.safe_dump(training, training_file)
+
+
+def amend_team_training(team_name):
+    with open(os.environ['FOOTBALL_HOME'] + "//teams//ref//team_id.yaml", "r") as file:
+        result = yaml.safe_load(file)[team_name]
+    with open(os.environ['FOOTBALL_HOME'] + "//teams//teams//" + str(result) + ".yaml", "r") as team_file:
+        team = yaml.safe_load(team_file)["player"]
+    for player_id in team:
+        amend_player_training(player_id)
+        print("")
+        print("")
 
 
 def amend_team_formation(team_name):
@@ -155,22 +176,22 @@ def amend_team_formation(team_name):
             while position != "":
                 position = "b"
                 for i in range(11):
-                    print(position_list[i] + " " + team["player"][team_formation[formation][i]])
+                    if team_formation[formation][i] not in team["player"].keys():
+                        team["player"][team_formation[formation][i]] = "N/A"
+                    print(position_list[i] + " " + team["player"][team_formation[formation][i]] + " " +
+                          team_formation[formation][i])
 
                 while position not in position_list + [""]:
                     position = input("Enter the position you wish to replace")  # This method won't work
                 player = position
-                while player not in list(team["player"].keys()) + [""]:
-                    print(list(team["player"].keys()))
+                while player not in list(team["player"].keys()) + [""] or player in team_formation[formation]:
+                    print([x for x in list(team["player"].keys()) if x not in team_formation[formation]])
                     player = input("Enter player id to replace him")
                 team_formation[formation] = [player if position == position_list[i] else team_formation[formation][i]
                                              for i in range(11)]
     with open(os.environ['FOOTBALL_HOME'] + "//teams//orders//" + str(result) + "-formation.yaml", "w") as \
             formation_file:
         yaml.safe_dump(team_formation, formation_file)
-        # TODO: Need to ensure we don't end up with duplicates
-        # TODO: Have kick return referred to twice
-        # TODO: Potentially allow to change all formations at once
 
 
 def amend_team_draft_aims(team_name):
@@ -253,7 +274,7 @@ def amend_team_order(team_name):
     time_between_plays = 45
     field_goal_range = -1
     while int(time_between_plays) not in range(10, 40):
-        time_between_plays = input("please enter how long you want your team to take between plays")
+        time_between_plays = input("please enter how long on average you want your team to take between plays")
 
     while int(field_goal_range) < 0:
         field_goal_range = input("please enter how far away you want to take field goals from on 4th down")
@@ -292,9 +313,7 @@ def amend_team_order(team_name):
                 skip = 0
             print(orders[orders_to_change])
             for play in orders[orders_to_change]:
-                print(play)
                 for form in current_formation:
-                    print(form)
                     if play[skip:] in current_formation[form][0] or play[skip + 1:] in current_formation[form][0]:
                         print("here")
                         play_form = form
@@ -309,15 +328,31 @@ def amend_team_order(team_name):
                 print(formation + ": " + str(formation_amount[formation]))
             new_amounts = formation_amount
             sum_play = {}
+            total = {}
             while True:
                 for formation in new_amounts:
                     for part in new_amounts[formation]:
-                        new_amounts[formation][part] = int(input("Please enter new % of plays to be run from " +
-                                                                 formation + " for down " + str(part)))
-                        if part in list(sum_play.keys()):
-                            sum_play[part] += new_amounts[formation][part]
-                        else:
-                            sum_play[part] = new_amounts[formation][part]
+                        if part not in total.keys():
+                            total[part] = 0
+                        go_forward = False
+                        while not go_forward:
+                            print(new_amounts[formation][part])
+                            print("Total so far for {} is {}".format(part, total[part]))
+                            value_here = input("Please enter new % of plays to be run from " +
+                                               formation + " for down " + str(part))
+                            value_here = 0 if value_here == "" else value_here
+                            new_amounts[formation][part] = int(value_here)
+
+                            if part in list(sum_play.keys()):
+                                sum_play[part] += new_amounts[formation][part]
+                            else:
+                                sum_play[part] = new_amounts[formation][part]
+                            if total[part] + new_amounts[formation][part] <= 100:
+                                total[part] += new_amounts[formation][part]
+                                go_forward = True
+
+                print("sum")
+                print(sum_play)
                 if list(sum_play.values()) == [100 for _ in range(len(sum_play))]:
                     break
             play_amounts = orders
@@ -344,9 +379,11 @@ def amend_team_order(team_name):
                                 if str(formation_amount) == str(new_amounts[formation_change]):
                                     play_amounts[orders_to_change][play][down] = 0
                                 else:
+                                    value = input("output how often you want to be for play {} and down {}"
+                                                  .format(play, down))
+                                    value = 0 if value == "0" else value
                                     play_amounts[orders_to_change][play][down] = \
-                                        int(input("output how often you want to be for play {} and down {}"
-                                                  .format(play, down)))
+                                        int(value)
                                 if play_amounts[orders_to_change][play][down] == '':
                                     play_amounts[orders_to_change][play][down] = 0
                             # if play_amounts[orders_to_change][play][down] < 0:
@@ -378,4 +415,5 @@ def play_week(week, season_no):
 # sorting_players.new_players(week)
 # if week == 10:
 #    league_structure.give_league_trophies(os.environ['FOOTBALL_HOME'] + "//leagues//" + str(season_no), season_no)
-print(league_structure.run_playoffs(os.environ['FOOTBALL_HOME'] + "//leagues//0"))
+# print(league_structure.run_playoffs(os.environ['FOOTBALL_HOME'] + "//leagues//0"))
+display_team("Traujin's Pros")
